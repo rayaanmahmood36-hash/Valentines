@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>For You ❤️</title>
+  <style>
+    :root{
+      --bg1:#ffdde1;
+      --bg2:#ee9ca7;
+      --card:#ffffffcc;
+      --text:#2b2b2b;
+      --accent:#ff4d6d;
+      --accent2:#d6336c;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background: radial-gradient(circle at top left, var(--bg1), var(--bg2));
+      overflow:hidden;
+    }
+
+    /* Floating hearts layer */
+    #hearts{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      overflow:hidden;
+      z-index:1;
+    }
+    .heart{
+      position:absolute;
+      width:14px;
+      height:14px;
+      transform: rotate(45deg);
+      opacity:0.9;
+      animation: floatUp linear forwards;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+    }
+    .heart::before,
+    .heart::after{
+      content:"";
+      position:absolute;
+      width:14px;
+      height:14px;
+      border-radius:50%;
+      background:inherit;
+    }
+    .heart::before{ left:-7px; top:0; }
+    .heart::after{ left:0; top:-7px; }
+
+    @keyframes floatUp{
+      0%{ transform:translateY(0) rotate(45deg); opacity:0; }
+      10%{ opacity:0.95; }
+      100%{ transform:translateY(-110vh) rotate(45deg); opacity:0; }
+    }
+
+    /* Confetti canvas */
+    #confettiCanvas{
+      position:fixed;
+      inset:0;
+      z-index:999;
+      pointer-events:none;
+    }
+
+    /* Main card */
+    .card{
+      position:relative;
+      z-index:2;
+      width:min(560px, 92vw);
+      background:var(--card);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius:24px;
+      box-shadow: 0 18px 60px rgba(0,0,0,0.18);
+      padding:26px 22px 22px;
+      text-align:center;
+    }
+
+    .pill{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding:8px 12px;
+      border-radius:999px;
+      background: rgba(255,255,255,0.65);
+      border:1px solid rgba(255,255,255,0.45);
+      font-size:14px;
+      margin-bottom:14px;
+    }
+
+    h1{
+      margin:6px 0 8px;
+      color:var(--accent2);
+      font-size: clamp(28px, 5vw, 36px);
+      line-height:1.1;
+    }
+    p{
+      margin: 6px 0;
+      font-size: 16px;
+      line-height:1.5;
+    }
+
+    .photo-wrap{
+      margin:16px auto 14px;
+      width:170px;
+      height:170px;
+      border-radius:22px;
+      overflow:hidden;
+      border: 2px solid rgba(255,255,255,0.55);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      background: rgba(255,255,255,0.4);
+    }
+    .photo-wrap img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .countdown{
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap:10px;
+      margin: 14px 0 16px;
+    }
+    .timebox{
+      padding:10px 8px;
+      border-radius:16px;
+      background: rgba(255,255,255,0.65);
+      border:1px solid rgba(255,255,255,0.5);
+    }
+    .num{
+      font-size:22px;
+      font-weight:800;
+      color:#222;
+    }
+    .label{
+      font-size:12px;
+      opacity:0.75;
+      margin-top:2px;
+    }
+
+    .question{
+      font-size:20px;
+      margin-top:10px;
+      font-weight:700;
+    }
+
+    .btnrow{
+      margin-top:14px;
+      display:flex;
+      gap:12px;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+    button{
+      border:none;
+      border-radius:14px;
+      padding:14px 20px;
+      font-size:16px;
+      cursor:pointer;
+      transition: transform 0.08s ease, box-shadow 0.15s ease;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+    }
+    button:active{ transform: translateY(1px) scale(0.99); }
+
+    .yes{
+      background: var(--accent);
+      color:#fff;
+    }
+    .no{
+      background: #6c757d;
+      color:#fff;
+      position:relative;
+    }
+
+    .small{
+      margin-top:12px;
+      font-size:13px;
+      opacity:0.85;
+    }
+
+    /* Tap-to-start overlay for audio */
+    #startOverlay{
+      position:fixed;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: rgba(0,0,0,0.28);
+      z-index:1000;
+      padding:18px;
+    }
+    .overlayCard{
+      width:min(520px, 92vw);
+      background: rgba(255,255,255,0.9);
+      border-radius:22px;
+      padding:20px 18px;
+      text-align:center;
+      box-shadow: 0 18px 60px rgba(0,0,0,0.25);
+    }
+    .overlayCard h2{
+      margin:0 0 8px;
+      color: var(--accent2);
+    }
+    .overlayCard p{
+      margin:0 0 14px;
+    }
+    .overlayBtn{
+      background: var(--accent);
+      color:#fff;
+      width:100%;
+    }
+
+    /* Success message */
+    #result{
+      margin-top:12px;
+      font-weight:700;
+      color: #1f7a3a;
+      min-height: 24px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Confetti -->
+  <canvas id="confettiCanvas"></canvas>
+
+  <!-- Floating hearts container -->
+  <div id="hearts"></div>
+
+  <!-- Tap overlay (for starting audio) -->
+  <div id="startOverlay">
+    <div class="overlayCard">
+      <h2>One tap before we begin 💗</h2>
+      <p>Browsers block autoplay music. Tap to start the page (and the song).</p>
+      <button class="overlayBtn" id="startBtn">Start 💞</button>
+      <div class="small">Tip: You can change the song + her photo in the code.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="pill">💌 <span id="namesLine">For <b>[HER NAME]</b> — from <b>[YOUR NAME]</b></span></div>
+
+    <h1>Hey <span id="herName">[HER NAME]</span> ❤️</h1>
+    <p id="messageLine">
+      Even though we’re miles apart, you’re always with me — in every thought and every day.
+    </p>
+
+    <!-- Her photo -->
+    <div class="photo-wrap">
+      <img id="herPhoto"
+           src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=800"
+           alt="Her photo">
+    </div>
+
+    <!-- Countdown -->
+    <div class="countdown" aria-label="countdown timer">
+      <div class="timebox"><div class="num" id="dd">--</div><div class="label">Days</div></div>
+      <div class="timebox"><div class="num" id="hh">--</div><div class="label">Hours</div></div>
+      <div class="timebox"><div class="num" id="mm">--</div><div class="label">Minutes</div></div>
+      <div class="timebox"><div class="num" id="ss">--</div><div class="label">Seconds</div></div>
+    </div>
+
+    <div class="question">Will you be my Valentine? </div>
+
+    <div class="btnrow">
+      <button class="yes" id="yesBtn">Yes 💕</button>
+      <button class="no" id="noBtn">No 😢</button>
+    </div>
+
+    <div id="result"></div>
+    <div class="small">Made with love ✨</div>
+  </div>
+
+  <!-- Background music -->
+  <audio id="bgMusic" loop>
+    <!-- Replace this with your own MP3 URL (recommended: upload mp3 to GitHub repo) -->
+    <source src="Cold_Play_-_Yellow_3_(mp3.pm).mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    /***********************
+     * 1) CUSTOMIZE HERE
+     ***********************/
+    const CONFIG = {
+      herName: "Zainab my forever favourite. my valentine ❤️❤️❤️❤️",                 // <-- change
+      yourName: "Your Rayaan",                // <-- change
+      messageLine: "I love you forever. This may not be the valentines we wanted, but I will always try to make every valentine we have together special because you are so special. You are my forever, my best friend, my girlfriend. The most beautiful girl I've ever seen. You should know that you're amazing and you mean the world to me.",
+      // For best results, put a photo URL you control (or upload to your GitHub repo).
+      // Example if photo is in same repo: "her.jpg"
+      herPhotoUrl: "us.jpg",            // <-- change (or keep the demo URL)
+      // Countdown target (Asia/Karachi). Change to your preferred moment.
+      targetTimeISO: "2026-02-14T00:00:00+05:00",
+      // Hearts frequency (lower = more hearts)
+      heartSpawnMs: 220
+    };
+
+    /***********************
+     * Apply configuration
+     ***********************/
+    const herNameEl = document.getElementById("herName");
+    const namesLineEl = document.getElementById("namesLine");
+    const messageEl = document.getElementById("messageLine");
+    const photoEl = document.getElementById("herPhoto");
+
+    herNameEl.textContent = CONFIG.herName;
+    namesLineEl.innerHTML = `For <b>${CONFIG.herName}</b> — from <b>${CONFIG.yourName}</b>`;
+    messageEl.textContent = CONFIG.messageLine;
+
+    // If her.jpg isn't found, it’ll show broken image; use a working URL or upload file to repo.
+    photoEl.src = CONFIG.herPhotoUrl;
+
+    /***********************
+     * 2) Start overlay + audio
+     ***********************/
+    const overlay = document.getElementById("startOverlay");
+    const startBtn = document.getElementById("startBtn");
+    const music = document.getElementById("bgMusic");
+
+    async function startExperience(){
+      overlay.style.display = "none";
+      try {
+        // Attempt to play music after user gesture
+        music.volume = 0.5;
+        await music.play();
+      } catch (e) {
+        // If it fails, it's okay; user can still enjoy the page
+        console.log("Music play blocked or missing file:", e);
+      }
+    }
+    startBtn.addEventListener("click", startExperience);
+
+    /***********************
+     * 3) Floating hearts
+     ***********************/
+    const heartsLayer = document.getElementById("hearts");
+
+    function rand(min, max){ return Math.random() * (max - min) + min; }
+
+    function spawnHeart(){
+      const heart = document.createElement("div");
+      heart.className = "heart";
+
+      const size = rand(10, 18);
+      heart.style.width = size + "px";
+      heart.style.height = size + "px";
+
+      const left = rand(0, 100);
+      heart.style.left = left + "vw";
+      heart.style.bottom = "-20px";
+
+      const duration = rand(4.5, 8.5);
+      heart.style.animationDuration = duration + "s";
+
+      // random pink/red
+      const colors = ["#ff4d6d", "#ff758f", "#ff8fab", "#d6336c", "#ff3b6b"];
+      heart.style.background = colors[Math.floor(Math.random() * colors.length)];
+
+      heartsLayer.appendChild(heart);
+
+      // cleanup
+      setTimeout(() => heart.remove(), duration * 1000 + 200);
+    }
+
+    let heartInterval = setInterval(spawnHeart, CONFIG.heartSpawnMs);
+
+    /***********************
+     * 4) Countdown timer
+     ***********************/
+    const dd = document.getElementById("dd");
+    const hh = document.getElementById("hh");
+    const mm = document.getElementById("mm");
+    const ss = document.getElementById("ss");
+
+    const target = new Date(CONFIG.targetTimeISO);
+
+    function pad(n){ return String(n).padStart(2, "0"); }
+
+    function updateCountdown(){
+      const now = new Date();
+      let diff = target.getTime() - now.getTime();
+
+      if (diff <= 0){
+        dd.textContent = "00";
+        hh.textContent = "00";
+        mm.textContent = "00";
+        ss.textContent = "00";
+        return;
+      }
+
+      const totalSeconds = Math.floor(diff / 1000);
+      const days = Math.floor(totalSeconds / 86400);
+      const hours = Math.floor((totalSeconds % 86400) / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+
+      dd.textContent = pad(days);
+      hh.textContent = pad(hours);
+      mm.textContent = pad(minutes);
+      ss.textContent = pad(seconds);
+    }
+    updateCountdown();
+    setInterval(updateCountdown, 1000);
+
+    /***********************
+     * 5) Confetti (simple canvas)
+     ***********************/
+    const canvas = document.getElementById("confettiCanvas");
+    const ctx = canvas.getContext("2d");
+
+    function resizeCanvas(){
+      canvas.width = window.innerWidth * devicePixelRatio;
+      canvas.height = window.innerHeight * devicePixelRatio;
+      canvas.style.width = window.innerWidth + "px";
+      canvas.style.height = window.innerHeight + "px";
+      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    let confettiPieces = [];
+    let confettiRunning = false;
+
+    function makeConfettiBurst(count=180){
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const originX = w/2;
+      const originY = h/3;
+
+      const colors = ["#ff4d6d", "#ff758f", "#ff8fab", "#ffd6e0", "#ffffff", "#d6336c"];
+
+      for(let i=0;i<count;i++){
+        confettiPieces.push({
+          x: originX,
+          y: originY,
+          vx: rand(-6, 6),
+          vy: rand(-10, -3),
+          g: rand(0.12, 0.22),
+          size: rand(4, 7),
+          rot: rand(0, Math.PI),
+          vr: rand(-0.2, 0.2),
+          color: colors[Math.floor(Math.random()*colors.length)],
+          life: rand(70, 120) // frames
+        });
+      }
+    }
+
+    function drawConfetti(){
+      if(!confettiRunning) return;
+
+      ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
+
+      confettiPieces = confettiPieces.filter(p => p.life > 0);
+
+      for(const p of confettiPieces){
+        p.life -= 1;
+        p.vy += p.g;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.vr;
+
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size*1.4);
+        ctx.restore();
+      }
+
+      if(confettiPieces.length === 0){
+        confettiRunning = false;
+        ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
+        return;
+      }
+
+      requestAnimationFrame(drawConfetti);
+    }
+
+    function startConfetti(){
+      confettiRunning = true;
+      makeConfettiBurst();
+      requestAnimationFrame(drawConfetti);
+      // stop after ~4s even if some remain
+      setTimeout(() => { confettiPieces = []; }, 4000);
+    }
+
+    /***********************
+ * Buttons behavior (EVIL NO BUTTON 😈)
+ ***********************/
+const yesBtn = document.getElementById("yesBtn");
+const noBtn = document.getElementById("noBtn");
+const result = document.getElementById("result");
+
+yesBtn.addEventListener("click", () => {
+  result.textContent = `YAY 😭❤️ I love you, ${CONFIG.herName}!`;
+  startConfetti();
+
+  clearInterval(heartInterval);
+  heartInterval = setInterval(spawnHeart, 120);
+  setTimeout(() => {
+    clearInterval(heartInterval);
+    heartInterval = setInterval(spawnHeart, CONFIG.heartSpawnMs);
+  }, 3500);
+});
+
+/* Teleport NO button */
+function teleportNo(){
+  const card = document.querySelector(".card");
+  const rect = card.getBoundingClientRect();
+
+  const maxX = rect.width - noBtn.offsetWidth - 20;
+  const maxY = rect.height - noBtn.offsetHeight - 20;
+
+  const x = Math.random() * maxX;
+  const y = Math.random() * maxY;
+
+  noBtn.style.position = "absolute";
+  noBtn.style.left = x + "px";
+  noBtn.style.top = y + "px";
+}
+
+/* Runs away BEFORE hover */
+noBtn.addEventListener("mouseenter", teleportNo);
+
+/* Runs away on mobile touch */
+noBtn.addEventListener("touchstart", (e) => {
+  e.preventDefault();
+  teleportNo();
+});
+
+/* Extra chaos: moves randomly every 800ms */
+setInterval(teleportNo, 800);
