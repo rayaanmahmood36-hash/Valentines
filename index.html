@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>For You ❤️</title>
   <style>
+    #startOverlay, .overlayCard, #startBtn{ pointer-events: auto !important; }
+
     :root{
       --bg1:#ffdde1;
       --bg2:#ee9ca7;
@@ -173,14 +175,12 @@
       align-items:center;
       justify-content:center;
       background: rgba(0,0,0,0.28);
-      z-index:2147483647;          /* MAX */
+      z-index:2147483647;
       padding:18px;
-      pointer-events:auto;          /* force */
-      touch-action: manipulation;   /* mobile taps */
+      pointer-events:auto;
+      touch-action: manipulation;
     }
-    #startOverlay *{
-      pointer-events:auto;          /* force children clickable */
-    }
+    #startOverlay *{ pointer-events:auto; }
 
     .overlayCard{
       width:min(520px, 92vw);
@@ -194,9 +194,7 @@
       margin:0 0 8px;
       color: var(--accent2);
     }
-    .overlayCard p{
-      margin:0 0 14px;
-    }
+    .overlayCard p{ margin:0 0 14px; }
     .overlayBtn{
       background: var(--accent);
       color:#fff;
@@ -241,7 +239,7 @@
       <div class="btnrow">
         <button class="yes" id="toReasons">Next ➡️</button>
       </div>
-      <div class="small">I love you 💘</div>
+      <div class="small">I love you ❤️</div>
     </div>
 
     <div class="screen" id="screen3">
@@ -262,11 +260,11 @@
       <div class="small">And I still want more time with you.</div>
     </div>
 
+    <!-- ✅ PS line removed here -->
     <div class="screen" id="screen5">
       <h1>My Love For You Is</h1>
       <div style="font-size:72px; font-weight:900; color:var(--accent2); margin-top:6px;">∞</div>
       <p>Forever. Always. No matter what.</p>
-      <div class="small">P.S. You just unlocked boyfriend-of-the-year edition 😏</div>
     </div>
   </div>
 
@@ -275,28 +273,56 @@
   </audio>
 
   <script>
-    // ✅ Make Start button work EVEN IF anything else breaks later
+    /***********************
+     * Start overlay + audio (CLICK ANYWHERE + FADE IN to 0.5)
+     ***********************/
     const overlay = document.getElementById("startOverlay");
     const startBtn = document.getElementById("startBtn");
     const music = document.getElementById("bgMusic");
 
-    async function startExperience(e){
-      if (e) { e.preventDefault(); e.stopPropagation(); }
+    function hideOverlay(){
       overlay.style.display = "none";
+      overlay.style.pointerEvents = "none";
+    }
+
+    async function startExperience(e){
+      if (e){
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      hideOverlay();
+
       try{
-        music.volume = 0.5;
+        // start very quiet
+        music.volume = 0.08;
+        // keep currentTime if you want it to resume; set to 0 for restart
+        // music.currentTime = 0;
+
         await music.play();
+
+        // fade up to 0.5
+        const target = 0.5;
+        const step = 0.02;
+        const speed = 120;
+
+        const fade = setInterval(() => {
+          music.volume = Math.min(target, music.volume + step);
+          if (music.volume >= target) clearInterval(fade);
+        }, speed);
+
       }catch(err){
-        console.log("Music blocked/missing (ok):", err);
+        console.log("Music blocked/missing:", err);
       }
     }
 
-    // Listen to multiple tap types (mobile-safe)
-    ["click","pointerdown","touchstart"].forEach(evt => {
-      startBtn.addEventListener(evt, startExperience, { passive:false });
+    // ✅ button + anywhere on overlay works (laptop + mobile)
+    ["click","pointerup","pointerdown","touchstart"].forEach(evt => {
+      startBtn.addEventListener(evt, startExperience, { capture:true, passive:false });
+      overlay.addEventListener(evt, startExperience, { capture:true, passive:false });
     });
 
-    // Everything else inside try so it can’t kill the Start button
+    // Everything else inside try so Start can’t break
     try {
       const CONFIG = {
         messageLine:
@@ -490,4 +516,5 @@
   </script>
 </body>
 </html>
+
 
