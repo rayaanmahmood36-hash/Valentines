@@ -84,78 +84,21 @@
       text-align:center;
     }
 
-    .pill{
-      display:inline-flex;
-      gap:8px;
-      align-items:center;
-      padding:8px 12px;
-      border-radius:999px;
-      background: rgba(255,255,255,0.65);
-      border:1px solid rgba(255,255,255,0.45);
-      font-size:14px;
-      margin-bottom:14px;
-    }
-
     h1{
-      margin:6px 0 8px;
+      margin:6px 0 10px;
       color:var(--accent2);
       font-size: clamp(28px, 5vw, 36px);
       line-height:1.1;
     }
     p{
-      margin: 6px 0;
+      margin: 10px 0 0;
       font-size: 16px;
-      line-height:1.5;
-    }
-
-    .photo-wrap{
-      margin:16px auto 14px;
-      width:170px;
-      height:170px;
-      border-radius:22px;
-      overflow:hidden;
-      border: 2px solid rgba(255,255,255,0.55);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-      background: rgba(255,255,255,0.4);
-    }
-    .photo-wrap img{
-      width:100%;
-      height:100%;
-      object-fit:cover;
-      display:block;
-    }
-
-    .countdown{
-      display:grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap:10px;
-      margin: 14px 0 16px;
-    }
-    .timebox{
-      padding:10px 8px;
-      border-radius:16px;
-      background: rgba(255,255,255,0.65);
-      border:1px solid rgba(255,255,255,0.5);
-    }
-    .num{
-      font-size:22px;
-      font-weight:800;
-      color:#222;
-    }
-    .label{
-      font-size:12px;
-      opacity:0.75;
-      margin-top:2px;
-    }
-
-    .question{
-      font-size:20px;
-      margin-top:10px;
-      font-weight:700;
+      line-height:1.6;
+      white-space: pre-wrap;
     }
 
     .btnrow{
-      margin-top:14px;
+      margin-top:18px;
       display:flex;
       gap:12px;
       justify-content:center;
@@ -169,6 +112,9 @@
       cursor:pointer;
       transition: transform 0.08s ease, box-shadow 0.15s ease;
       box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
     button:active{ transform: translateY(1px) scale(0.99); }
 
@@ -183,9 +129,32 @@
     }
 
     .small{
-      margin-top:12px;
+      margin-top:14px;
       font-size:13px;
       opacity:0.85;
+    }
+
+    /* Photo */
+    .photo-wrap{
+      margin:16px auto 0;
+      width:220px;
+      height:220px;
+      border-radius:22px;
+      overflow:hidden;
+      border: 2px solid rgba(255,255,255,0.55);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      background: rgba(255,255,255,0.4);
+      animation: popIn 420ms ease;
+    }
+    .photo-wrap img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    @keyframes popIn{
+      from{ transform: scale(0.88); opacity: 0; }
+      to{ transform: scale(1); opacity: 1; }
     }
 
     /* Tap-to-start overlay for audio */
@@ -220,13 +189,8 @@
       width:100%;
     }
 
-    /* Success message */
-    #result{
-      margin-top:12px;
-      font-weight:700;
-      color: #1f7a3a;
-      min-height: 24px;
-    }
+    /* Screen switching */
+    #screen2{ display:none; }
   </style>
 </head>
 <body>
@@ -241,86 +205,52 @@
   <div id="startOverlay">
     <div class="overlayCard">
       <h2>One tap before we begin 💗</h2>
-      <p>Browsers block autoplay music. Tap to start the page (and the song).</p>
+      <p>Tap to start the page (and the song).</p>
       <button class="overlayBtn" id="startBtn">Start 💞</button>
-      <div class="small">Tip: You can change the song + her photo in the code.</div>
+      <div class="small">Tip: your photo must be named <b>us.jpg</b> in the repo.</div>
     </div>
   </div>
 
   <div class="card">
-    <div class="pill">💌 <span id="namesLine">For <b>[Zainab my jaan]</b> — from <b>[your rayaan]</b></span></div>
-
-    <h1>Hey <span id="herName">[Zainab my favourite]</span> ❤️</h1>
-    <p id="messageLine">
-      We might be in different places but zainab you are my forever valentine my heart.
-    </p>
-
-    <!-- Her photo -->
-    <div class="photo-wrap">
-      <img id="herPhoto"
-           src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=800"
-           alt="Her photo">
+    <!-- SCREEN 1 -->
+    <div id="screen1">
+      <h1>Will you be my Valentine? ❤️</h1>
+      <div class="btnrow">
+        <button class="yes" id="yesBtn">Yes 💕</button>
+        <button class="no" id="noBtn">No 😢</button>
+      </div>
+      <div class="small">Made with love ✨</div>
     </div>
 
-    <!-- Countdown -->
-    <div class="countdown" aria-label="countdown timer">
-      <div class="timebox"><div class="num" id="dd">--</div><div class="label">Days</div></div>
-      <div class="timebox"><div class="num" id="hh">--</div><div class="label">Hours</div></div>
-      <div class="timebox"><div class="num" id="mm">--</div><div class="label">Minutes</div></div>
-      <div class="timebox"><div class="num" id="ss">--</div><div class="label">Seconds</div></div>
+    <!-- SCREEN 2 -->
+    <div id="screen2">
+      <h1>Happy Valentine’s ❤️</h1>
+      <p id="messageLine"></p>
+      <div class="photo-wrap">
+        <img id="herPhoto" src="" alt="Our photo">
+      </div>
+      <div class="small">I love you 💘</div>
     </div>
-
-    <div class="question">Will you be my Valentine? </div>
-
-    <div class="btnrow">
-      <button class="yes" id="yesBtn">Yes 💕</button>
-      <button class="no" id="noBtn">No 😢</button>
-    </div>
-
-    <div id="result"></div>
-    <div class="small">Made with love ✨</div>
   </div>
 
   <!-- Background music -->
   <audio id="bgMusic" loop>
-    <!-- Replace this with your own MP3 URL (recommended: upload mp3 to GitHub repo) -->
     <source src="Cold_Play_-_Yellow_3_(mp3.pm).mp3" type="audio/mpeg">
   </audio>
 
   <script>
     /***********************
-     * 1) CUSTOMIZE HERE
+     * CUSTOMIZE HERE
      ***********************/
     const CONFIG = {
-      herName: "Zainab my forever favourite. my valentine ❤️❤️❤️❤️",                 // <-- change
-      yourName: "Your Rayaan",                // <-- change
-      messageLine: "I love you forever. This may not be the valentines we wanted, but I will always try to make every valentine we have together special because you are so special. You are my forever, my best friend, my girlfriend. The most beautiful girl I've ever seen. You should know that you're amazing and you mean the world to me.",
-      // For best results, put a photo URL you control (or upload to your GitHub repo).
-      // Example if photo is in same repo: "her.jpg"
-      herPhotoUrl: "us.jpg",            // <-- change (or keep the demo URL)
-      // Countdown target (Asia/Karachi). Change to your preferred moment.
-      targetTimeISO: "2026-02-14T00:00:00+05:00",
-      // Hearts frequency (lower = more hearts)
+      messageLine:
+        "I love you forever. This may not be the valentines we wanted, but I will always try to make every valentine we have together special because you are so special. You are my forever, my best friend, my girlfriend. The most beautiful girl I've ever seen. You should know that you're amazing and you mean the world to me.",
+      herPhotoUrl: "us.jpg", // make sure this file exists in the repo root
       heartSpawnMs: 220
     };
 
     /***********************
-     * Apply configuration
-     ***********************/
-    const herNameEl = document.getElementById("herName");
-    const namesLineEl = document.getElementById("namesLine");
-    const messageEl = document.getElementById("messageLine");
-    const photoEl = document.getElementById("herPhoto");
-
-    herNameEl.textContent = CONFIG.herName;
-    namesLineEl.innerHTML = `For <b>${CONFIG.herName}</b> — from <b>${CONFIG.yourName}</b>`;
-    messageEl.textContent = CONFIG.messageLine;
-
-    // If her.jpg isn't found, it’ll show broken image; use a working URL or upload file to repo.
-    photoEl.src = CONFIG.herPhotoUrl;
-
-    /***********************
-     * 2) Start overlay + audio
+     * Start overlay + audio
      ***********************/
     const overlay = document.getElementById("startOverlay");
     const startBtn = document.getElementById("startBtn");
@@ -328,22 +258,20 @@
 
     async function startExperience(){
       overlay.style.display = "none";
-      try {
-        // Attempt to play music after user gesture
+      overlay.style.pointerEvents = "none";
+      try{
         music.volume = 0.5;
         await music.play();
-      } catch (e) {
-        // If it fails, it's okay; user can still enjoy the page
-        console.log("Music play blocked or missing file:", e);
+      }catch(e){
+        console.log("Music blocked or missing:", e);
       }
     }
     startBtn.addEventListener("click", startExperience);
 
     /***********************
-     * 3) Floating hearts
+     * Floating hearts
      ***********************/
     const heartsLayer = document.getElementById("hearts");
-
     function rand(min, max){ return Math.random() * (max - min) + min; }
 
     function spawnHeart(){
@@ -361,58 +289,17 @@
       const duration = rand(4.5, 8.5);
       heart.style.animationDuration = duration + "s";
 
-      // random pink/red
       const colors = ["#ff4d6d", "#ff758f", "#ff8fab", "#d6336c", "#ff3b6b"];
       heart.style.background = colors[Math.floor(Math.random() * colors.length)];
 
       heartsLayer.appendChild(heart);
-
-      // cleanup
       setTimeout(() => heart.remove(), duration * 1000 + 200);
     }
 
     let heartInterval = setInterval(spawnHeart, CONFIG.heartSpawnMs);
 
     /***********************
-     * 4) Countdown timer
-     ***********************/
-    const dd = document.getElementById("dd");
-    const hh = document.getElementById("hh");
-    const mm = document.getElementById("mm");
-    const ss = document.getElementById("ss");
-
-    const target = new Date(CONFIG.targetTimeISO);
-
-    function pad(n){ return String(n).padStart(2, "0"); }
-
-    function updateCountdown(){
-      const now = new Date();
-      let diff = target.getTime() - now.getTime();
-
-      if (diff <= 0){
-        dd.textContent = "00";
-        hh.textContent = "00";
-        mm.textContent = "00";
-        ss.textContent = "00";
-        return;
-      }
-
-      const totalSeconds = Math.floor(diff / 1000);
-      const days = Math.floor(totalSeconds / 86400);
-      const hours = Math.floor((totalSeconds % 86400) / 3600);
-      const minutes = Math.floor((totalSeconds % 3600) / 60);
-      const seconds = totalSeconds % 60;
-
-      dd.textContent = pad(days);
-      hh.textContent = pad(hours);
-      mm.textContent = pad(minutes);
-      ss.textContent = pad(seconds);
-    }
-    updateCountdown();
-    setInterval(updateCountdown, 1000);
-
-    /***********************
-     * 5) Confetti (simple canvas)
+     * Confetti (simple canvas)
      ***********************/
     const canvas = document.getElementById("confettiCanvas");
     const ctx = canvas.getContext("2d");
@@ -440,8 +327,7 @@
 
       for(let i=0;i<count;i++){
         confettiPieces.push({
-          x: originX,
-          y: originY,
+          x: originX, y: originY,
           vx: rand(-6, 6),
           vy: rand(-10, -3),
           g: rand(0.12, 0.22),
@@ -449,7 +335,7 @@
           rot: rand(0, Math.PI),
           vr: rand(-0.2, 0.2),
           color: colors[Math.floor(Math.random()*colors.length)],
-          life: rand(70, 120) // frames
+          life: rand(70, 120)
         });
       }
     }
@@ -458,7 +344,6 @@
       if(!confettiRunning) return;
 
       ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
-
       confettiPieces = confettiPieces.filter(p => p.life > 0);
 
       for(const p of confettiPieces){
@@ -481,7 +366,6 @@
         ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
         return;
       }
-
       requestAnimationFrame(drawConfetti);
     }
 
@@ -489,52 +373,97 @@
       confettiRunning = true;
       makeConfettiBurst();
       requestAnimationFrame(drawConfetti);
-      // stop after ~4s even if some remain
       setTimeout(() => { confettiPieces = []; }, 4000);
     }
 
     /***********************
- * Buttons behavior (EVIL NO BUTTON 😈)
- ***********************/
-// --- EVIL NO BUTTON (never clickable) ---
-function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+     * Buttons behavior
+     ***********************/
+    const yesBtn = document.getElementById("yesBtn");
+    const noBtn = document.getElementById("noBtn");
+    const card = document.querySelector(".card");
 
-function teleportNo(){
-  const card = document.querySelector(".card");
-  const rect = card.getBoundingClientRect();
+    // YES -> switch screens and show message + photo
+    function goYes(){
+      document.getElementById("screen1").style.display = "none";
+      document.getElementById("screen2").style.display = "block";
 
-  const pad = 16;
-  const maxX = rect.width - noBtn.offsetWidth - pad;
-  const maxY = rect.height - noBtn.offsetHeight - pad;
+      document.getElementById("messageLine").textContent = CONFIG.messageLine;
+      document.getElementById("herPhoto").src = CONFIG.herPhotoUrl;
 
-  // If card is too small, just keep it inside safely
-  const x = Math.random() * Math.max(pad, maxX);
-  const y = Math.random() * Math.max(pad, maxY);
+      startConfetti();
 
-  noBtn.style.position = "absolute";
-  noBtn.style.left = clamp(x, pad, Math.max(pad, maxX)) + "px";
-  noBtn.style.top  = clamp(y, pad, Math.max(pad, maxY)) + "px";
-}
+      // Bonus: faster hearts for a moment
+      clearInterval(heartInterval);
+      heartInterval = setInterval(spawnHeart, 120);
+      setTimeout(() => {
+        clearInterval(heartInterval);
+        heartInterval = setInterval(spawnHeart, CONFIG.heartSpawnMs);
+      }, 3500);
+    }
 
-// Runs away when you get CLOSE (not just hover)
-document.querySelector(".card").addEventListener("pointermove", (e) => {
-  const b = noBtn.getBoundingClientRect();
-  const dx = (b.left + b.width/2) - e.clientX;
-  const dy = (b.top + b.height/2) - e.clientY;
-  const dist = Math.hypot(dx, dy);
+    yesBtn.addEventListener("click", goYes);
+    // mobile responsiveness
+    yesBtn.addEventListener("pointerdown", () => yesBtn.click());
 
-  if (dist < 120) teleportNo(); // adjust 120 to make it more/less aggressive
-});
+    // EVIL NO button (runs away but NEVER blocks YES)
+    function teleportNoAvoidYes(){
+      const cardRect = card.getBoundingClientRect();
+      const yesRect = yesBtn.getBoundingClientRect();
 
-// Prevent any click/tap
-noBtn.addEventListener("pointerdown", (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  teleportNo();
-});
+      const pad = 16;
+      const maxX = cardRect.width - noBtn.offsetWidth - pad;
+      const maxY = cardRect.height - noBtn.offsetHeight - pad;
 
-// Start it somewhere random immediately
-teleportNo();
+      // YES position relative to card
+      const yesLeft = yesRect.left - cardRect.left;
+      const yesTop = yesRect.top - cardRect.top;
+      const yesRight = yesLeft + yesRect.width;
+      const yesBottom = yesTop + yesRect.height;
+
+      for(let tries=0; tries<25; tries++){
+        const x = pad + Math.random() * Math.max(1, maxX - pad);
+        const y = pad + Math.random() * Math.max(1, maxY - pad);
+
+        const noLeft = x;
+        const noTop = y;
+        const noRight = x + noBtn.offsetWidth;
+        const noBottom = y + noBtn.offsetHeight;
+
+        const overlapsYes = !(noRight < yesLeft || noLeft > yesRight || noBottom < yesTop || noTop > yesBottom);
+
+        if(!overlapsYes){
+          noBtn.style.position = "absolute";
+          noBtn.style.left = x + "px";
+          noBtn.style.top = y + "px";
+          return;
+        }
+      }
+
+      // fallback: top-right
+      noBtn.style.position = "absolute";
+      noBtn.style.left = Math.max(pad, maxX) + "px";
+      noBtn.style.top = pad + "px";
+    }
+
+    // Run away when pointer gets close
+    card.addEventListener("pointermove", (e) => {
+      const b = noBtn.getBoundingClientRect();
+      const dx = (b.left + b.width/2) - e.clientX;
+      const dy = (b.top + b.height/2) - e.clientY;
+      if(Math.hypot(dx, dy) < 140) teleportNoAvoidYes();
+    });
+
+    // prevent clicks/taps on NO
+    noBtn.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      teleportNoAvoidYes();
+    });
+
+    // place it safely at start
+    teleportNoAvoidYes();
   </script>
 </body>
 </html>
+
