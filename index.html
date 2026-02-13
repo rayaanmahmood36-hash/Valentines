@@ -510,9 +510,32 @@
       });
 
       teleportNo();
+    let typed = "";
+document.addEventListener("keydown", (e) => {
+  typed += (e.key || "").toLowerCase();
+  if (typed.length > 12) typed = typed.slice(-12);
+
+  if (typed.includes("zainab")) {
+    showJoke("Easter egg: zainab is the prettiest girl in the universe ✨");
+    typed = "";
+  }
+});
+let typed = "";
+document.addEventListener("keydown", (e) => {
+  typed += (e.key || "").toLowerCase();
+  if (typed.length > 12) typed = typed.slice(-12);
+
+  if (typed.includes("zainab")) {
+    showJoke("Easter egg: zainab is the prettiest girl in the universe ✨");
+    typed = "";
+  }
+});
+
+    
     } catch (err) {
       console.log("Non-fatal script error:", err);
     }
+    
   </script>
 </body>
 </html>
