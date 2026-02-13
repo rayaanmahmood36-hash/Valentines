@@ -248,11 +248,11 @@
   </div>
 
   <div class="card">
-    <div class="pill">💌 <span id="namesLine">For <b>[HER NAME]</b> — from <b>[YOUR NAME]</b></span></div>
+    <div class="pill">💌 <span id="namesLine">For <b>[Zainab my jaan]</b> — from <b>[your rayaan]</b></span></div>
 
-    <h1>Hey <span id="herName">[HER NAME]</span> ❤️</h1>
+    <h1>Hey <span id="herName">[Zainab my favourite]</span> ❤️</h1>
     <p id="messageLine">
-      Even though we’re miles apart, you’re always with me — in every thought and every day.
+      We might be in different places but zainab you are my forever valentine my heart.
     </p>
 
     <!-- Her photo -->
@@ -496,46 +496,45 @@
     /***********************
  * Buttons behavior (EVIL NO BUTTON 😈)
  ***********************/
-const yesBtn = document.getElementById("yesBtn");
-const noBtn = document.getElementById("noBtn");
-const result = document.getElementById("result");
+// --- EVIL NO BUTTON (never clickable) ---
+function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
 
-yesBtn.addEventListener("click", () => {
-  result.textContent = `YAY 😭❤️ I love you, ${CONFIG.herName}!`;
-  startConfetti();
-
-  clearInterval(heartInterval);
-  heartInterval = setInterval(spawnHeart, 120);
-  setTimeout(() => {
-    clearInterval(heartInterval);
-    heartInterval = setInterval(spawnHeart, CONFIG.heartSpawnMs);
-  }, 3500);
-});
-
-/* Teleport NO button */
 function teleportNo(){
   const card = document.querySelector(".card");
   const rect = card.getBoundingClientRect();
 
-  const maxX = rect.width - noBtn.offsetWidth - 20;
-  const maxY = rect.height - noBtn.offsetHeight - 20;
+  const pad = 16;
+  const maxX = rect.width - noBtn.offsetWidth - pad;
+  const maxY = rect.height - noBtn.offsetHeight - pad;
 
-  const x = Math.random() * maxX;
-  const y = Math.random() * maxY;
+  // If card is too small, just keep it inside safely
+  const x = Math.random() * Math.max(pad, maxX);
+  const y = Math.random() * Math.max(pad, maxY);
 
   noBtn.style.position = "absolute";
-  noBtn.style.left = x + "px";
-  noBtn.style.top = y + "px";
+  noBtn.style.left = clamp(x, pad, Math.max(pad, maxX)) + "px";
+  noBtn.style.top  = clamp(y, pad, Math.max(pad, maxY)) + "px";
 }
 
-/* Runs away BEFORE hover */
-noBtn.addEventListener("mouseenter", teleportNo);
+// Runs away when you get CLOSE (not just hover)
+document.querySelector(".card").addEventListener("pointermove", (e) => {
+  const b = noBtn.getBoundingClientRect();
+  const dx = (b.left + b.width/2) - e.clientX;
+  const dy = (b.top + b.height/2) - e.clientY;
+  const dist = Math.hypot(dx, dy);
 
-/* Runs away on mobile touch */
-noBtn.addEventListener("touchstart", (e) => {
+  if (dist < 120) teleportNo(); // adjust 120 to make it more/less aggressive
+});
+
+// Prevent any click/tap
+noBtn.addEventListener("pointerdown", (e) => {
   e.preventDefault();
+  e.stopPropagation();
   teleportNo();
 });
 
-/* Extra chaos: moves randomly every 800ms */
-setInterval(teleportNo, 800);
+// Start it somewhere random immediately
+teleportNo();
+  </script>
+</body>
+</html>
