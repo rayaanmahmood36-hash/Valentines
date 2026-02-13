@@ -1,177 +1,431 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>For You ❤️</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>For You ❤️</title>
+  <style>
+    :root{
+      --bg1:#ffdde1;
+      --bg2:#ee9ca7;
+      --card:#ffffffcc;
+      --text:#2b2b2b;
+      --accent:#ff4d6d;
+      --accent2:#d6336c;
+    }
 
-<style>
-:root{
-  --bg1:#ffdde1;
-  --bg2:#ee9ca7;
-  --card:#ffffffcc;
-  --accent:#ff4d6d;
-  --accent2:#d6336c;
-}
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background: radial-gradient(circle at top left, var(--bg1), var(--bg2));
+      overflow:hidden;
+    }
 
-body{
-  margin:0;
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-family: system-ui, Arial;
-  background: radial-gradient(circle at top left, var(--bg1), var(--bg2));
-  overflow:hidden;
-}
+    /* Floating hearts layer */
+    #hearts{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      overflow:hidden;
+      z-index:1;
+    }
+    .heart{
+      position:absolute;
+      width:14px;
+      height:14px;
+      transform: rotate(45deg);
+      opacity:0.9;
+      animation: floatUp linear forwards;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));
+    }
+    .heart::before,
+    .heart::after{
+      content:"";
+      position:absolute;
+      width:14px;
+      height:14px;
+      border-radius:50%;
+      background:inherit;
+    }
+    .heart::before{ left:-7px; top:0; }
+    .heart::after{ left:0; top:-7px; }
 
-.card{
-  width:min(520px,90vw);
-  background:var(--card);
-  padding:28px;
-  border-radius:22px;
-  text-align:center;
-  box-shadow:0 20px 60px rgba(0,0,0,.25);
-}
+    @keyframes floatUp{
+      0%{ transform:translateY(0) rotate(45deg); opacity:0; }
+      10%{ opacity:0.95; }
+      100%{ transform:translateY(-110vh) rotate(45deg); opacity:0; }
+    }
 
-h1{color:var(--accent2)}
-p{line-height:1.6}
+    /* Confetti canvas */
+    #confettiCanvas{
+      position:fixed;
+      inset:0;
+      z-index:999;
+      pointer-events:none;
+    }
 
-button{
-  border:none;
-  border-radius:14px;
-  padding:14px 20px;
-  font-size:16px;
-  cursor:pointer;
-  margin:10px;
-}
+    /* Main card */
+    .card{
+      position:relative;
+      z-index:2;
+      width:min(560px, 92vw);
+      background:var(--card);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius:24px;
+      box-shadow: 0 18px 60px rgba(0,0,0,0.18);
+      padding:26px 22px 22px;
+      text-align:center;
+      overflow:hidden; /* keep runaway button inside */
+    }
 
-.yes{background:var(--accent);color:white}
-.no{background:#777;color:white}
+    h1{
+      margin:6px 0 10px;
+      color:var(--accent2);
+      font-size: clamp(28px, 5vw, 36px);
+      line-height:1.1;
+    }
+    p{
+      margin: 10px 0 0;
+      font-size: 16px;
+      line-height:1.6;
+      white-space: pre-wrap;
+    }
 
-.photo{
-  width:220px;
-  height:220px;
-  margin:20px auto;
-  border-radius:20px;
-  overflow:hidden;
-  box-shadow:0 10px 25px rgba(0,0,0,.2)
-}
-.photo img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-}
+    ul{
+      margin: 12px 0 0;
+      text-align:left;
+      padding-left: 20px;
+      line-height: 1.7;
+    }
+    li{ margin: 6px 0; }
 
-.screen{display:none}
-#screen1{display:block}
+    .btnrow{
+      margin-top:18px;
+      display:flex;
+      gap:12px;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+    button{
+      border:none;
+      border-radius:14px;
+      padding:14px 20px;
+      font-size:16px;
+      cursor:pointer;
+      transition: transform 0.08s ease, box-shadow 0.15s ease;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    button:active{ transform: translateY(1px) scale(0.99); }
 
-ul{text-align:left}
-</style>
+    .yes{
+      background: var(--accent);
+      color:#fff;
+    }
+    .no{
+      background: #6c757d;
+      color:#fff;
+      position:relative;
+    }
+
+    .small{
+      margin-top:14px;
+      font-size:13px;
+      opacity:0.85;
+    }
+
+    /* Photo */
+    .photo-wrap{
+      margin:16px auto 0;
+      width:220px;
+      height:220px;
+      border-radius:22px;
+      overflow:hidden;
+      border: 2px solid rgba(255,255,255,0.55);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      background: rgba(255,255,255,0.4);
+      animation: popIn 420ms ease;
+    }
+    .photo-wrap img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    @keyframes popIn{
+      from{ transform: scale(0.88); opacity: 0; }
+      to{ transform: scale(1); opacity: 1; }
+    }
+
+    /* Tap-to-start overlay for audio */
+    #startOverlay{
+      position:fixed;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background: rgba(0,0,0,0.28);
+      z-index:1000;
+      padding:18px;
+    }
+    .overlayCard{
+      width:min(520px, 92vw);
+      background: rgba(255,255,255,0.9);
+      border-radius:22px;
+      padding:20px 18px;
+      text-align:center;
+      box-shadow: 0 18px 60px rgba(0,0,0,0.25);
+    }
+    .overlayCard h2{
+      margin:0 0 8px;
+      color: var(--accent2);
+    }
+    .overlayCard p{
+      margin:0 0 14px;
+    }
+    .overlayBtn{
+      background: var(--accent);
+      color:#fff;
+      width:100%;
+    }
+
+    /* Screens */
+    .screen{ display:none; }
+    #screen1{ display:block; }
+  </style>
 </head>
-
 <body>
 
-<div class="card">
+  <!-- Confetti -->
+  <canvas id="confettiCanvas"></canvas>
 
-<!-- SCREEN 1 -->
-<div class="screen" id="screen1">
-  <h1>Will you be my Valentine? ❤️</h1>
-  <button class="yes" onclick="goYes()">Yes 💕</button>
-  <button class="no" onclick="moveNo()">No 😢</button>
-</div>
+  <!-- Floating hearts container -->
+  <div id="hearts"></div>
 
-<!-- SCREEN 2 -->
-<div class="screen" id="screen2">
-  <h1>Happy Valentine’s ❤️</h1>
-  <p id="message"></p>
-  <div class="photo">
-    <img src="us.jpg">
+  <!-- Tap overlay (for starting audio) -->
+  <div id="startOverlay">
+    <div class="overlayCard">
+      <h2>One tap before we begin 💗</h2>
+      <p>Tap to start the page (and the song).</p>
+      <button class="overlayBtn" id="startBtn">Start 💞</button>
+      <div class="small">Tip: your photo must be named <b>us.jpg</b> in the repo.</div>
+    </div>
   </div>
-  <button class="yes" onclick="showScreen(3)">Next ➡️</button>
-</div>
 
-<!-- SCREEN 3 -->
-<div class="screen" id="screen3">
-  <h1>Reasons I Love You ❤️</h1>
-  <ul id="reasons"></ul>
-  <button class="yes" onclick="showScreen(4)">Next ➡️</button>
-</div>
+  <div class="card">
 
-<!-- SCREEN 4 -->
-<div class="screen" id="screen4">
-  <h1>We’ve Been Together For 💕</h1>
-  <p id="timeTogether"></p>
-  <button class="yes" onclick="showScreen(5)">Next ➡️</button>
-</div>
+    <!-- SCREEN 1 -->
+    <div class="screen" id="screen1">
+      <h1>Will you be my Valentine? ❤️</h1>
+      <div class="btnrow">
+        <button class="yes" id="yesBtn">Yes 💕</button>
+        <button class="no" id="noBtn">No 😢</button>
+      </div>
+      <div class="small">Made with love ✨</div>
+    </div>
 
-<!-- SCREEN 5 -->
-<div class="screen" id="screen5">
-  <h1>My Love For You Is</h1>
-  <div style="font-size:80px;color:#d6336c">∞</div>
-  <p>Forever. Always. No matter what.</p>
-</div>
+    <!-- SCREEN 2 -->
+    <div class="screen" id="screen2">
+      <h1>Happy Valentine’s ❤️</h1>
+      <p id="messageLine"></p>
 
-</div>
+      <div class="photo-wrap">
+        <img id="herPhoto" src="" alt="Our photo">
+      </div>
 
-<!-- MUSIC -->
-<audio id="music" loop>
-  <source src="Cold_Play_-_Yellow_3_(mp3.pm).mp3" type="audio/mpeg">
-</audio>
+      <div class="btnrow">
+        <button class="yes" id="toReasons">Next ➡️</button>
+      </div>
 
-<script>
-const messageText =
-"I love you forever. You are my best friend, my girlfriend, my safe place and my forever. You mean the entire world to me and I promise to always love you.";
+      <div class="small">I love you 💘</div>
+    </div>
 
-const reasonsList = [
-"You have the most beautiful smile",
-"You are the cutest girl ever",
-"You understand me",
-"You make me feel safe",
-"You take care of me",
-"You're my best friend",
-"You’re mine ❤️",
-"You're smart, kind and loving"
-];
+    <!-- SCREEN 3 -->
+    <div class="screen" id="screen3">
+      <h1>Reasons I Love You ❤️</h1>
+      <ul id="reasonsList"></ul>
 
-const startDate = new Date("2024-07-09");
+      <div class="btnrow">
+        <button class="yes" id="toTime">Next ➡️</button>
+      </div>
 
-const music = document.getElementById("music");
-document.body.addEventListener("click",()=>music.play(),{once:true});
+      <div class="small">If I wrote all the reasons, this site would crash 😭</div>
+    </div>
 
-function showScreen(n){
- document.querySelectorAll(".screen").forEach(s=>s.style.display="none");
- document.getElementById("screen"+n).style.display="block";
-}
+    <!-- SCREEN 4 -->
+    <div class="screen" id="screen4">
+      <h1>We’ve Been Together For 💕</h1>
+      <p id="timeTogether"></p>
 
-function goYes(){
- document.getElementById("message").innerText = messageText;
- const ul=document.getElementById("reasons");
- reasonsList.forEach(r=>{
-   const li=document.createElement("li");
-   li.innerText=r;
-   ul.appendChild(li);
- });
- updateTime();
- showScreen(2);
-}
+      <div class="btnrow">
+        <button class="yes" id="toInfinity">Next ➡️</button>
+      </div>
 
-function updateTime(){
- const now=new Date();
- const days=Math.floor((now-startDate)/(1000*60*60*24));
- document.getElementById("timeTogether").innerText =
- days+" days and counting ❤️";
-}
+      <div class="small">And I still want more time with you.</div>
+    </div>
 
-// Naughty NO button
-function moveNo(){
- const x=Math.random()*200-100;
- const y=Math.random()*200-100;
- event.target.style.transform=`translate(${x}px,${y}px)`;
-}
-</script>
+    <!-- SCREEN 5 -->
+    <div class="screen" id="screen5">
+      <h1>My Love For You Is</h1>
+      <div style="font-size:72px; font-weight:900; color:var(--accent2); margin-top:6px;">∞</div>
+      <p>Forever. Always. No matter what.</p>
+      <div class="small">P.S. You just unlocked boyfriend-of-the-year edition 😏</div>
+    </div>
 
-</body>
-</html>
+  </div>
 
+  <!-- Background music -->
+  <audio id="bgMusic" loop>
+    <source src="Cold_Play_-_Yellow_3_(mp3.pm).mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    /***********************
+     * CUSTOMIZE HERE
+     ***********************/
+    const CONFIG = {
+      messageLine:
+        "I love you forever. This may not be the valentines we wanted, but I will always try to make every valentine we have together special because you are so special. You are my forever, my best friend, my girlfriend. The most beautiful girl I've ever seen. You should know that you're amazing and you mean the world to me.",
+      herPhotoUrl: "us.jpg",     // make sure this file exists in the repo root
+      heartSpawnMs: 220,
+      startDate: "2024-07-09",   // CHANGE this to your real date (YYYY-MM-DD)
+      reasons: [
+        "You have the most beautiful smile in the world",
+        "You are the cutest girl in the world",
+        "You really take care of me in every way. Thank you zainab",
+        "You make me feel heard.",
+        "You understand me",
+        "You're my best friend, the person I can really be myself with",
+        "You’re so caring not just of me but everyone around you",
+        "You’re mine",
+        "You're so smart, capable, lovable"
+      ]
+    };
+
+    /***********************
+     * Start overlay + audio
+     ***********************/
+    const overlay = document.getElementById("startOverlay");
+    const startBtn = document.getElementById("startBtn");
+    const music = document.getElementById("bgMusic");
+
+    async function startExperience(){
+      overlay.style.display = "none";
+      overlay.style.pointerEvents = "none";
+      try{
+        music.volume = 0.5;
+        await music.play();
+      }catch(e){
+        console.log("Music blocked or missing:", e);
+      }
+    }
+    startBtn.addEventListener("click", startExperience);
+
+    /***********************
+     * Floating hearts
+     ***********************/
+    const heartsLayer = document.getElementById("hearts");
+    function rand(min, max){ return Math.random() * (max - min) + min; }
+
+    function spawnHeart(){
+      const heart = document.createElement("div");
+      heart.className = "heart";
+
+      const size = rand(10, 18);
+      heart.style.width = size + "px";
+      heart.style.height = size + "px";
+
+      const left = rand(0, 100);
+      heart.style.left = left + "vw";
+      heart.style.bottom = "-20px";
+
+      const duration = rand(4.5, 8.5);
+      heart.style.animationDuration = duration + "s";
+
+      const colors = ["#ff4d6d", "#ff758f", "#ff8fab", "#d6336c", "#ff3b6b"];
+      heart.style.background = colors[Math.floor(Math.random() * colors.length)];
+
+      heartsLayer.appendChild(heart);
+      setTimeout(() => heart.remove(), duration * 1000 + 200);
+    }
+    let heartInterval = setInterval(spawnHeart, CONFIG.heartSpawnMs);
+
+    /***********************
+     * Confetti (simple canvas)
+     ***********************/
+    const canvas = document.getElementById("confettiCanvas");
+    const ctx = canvas.getContext("2d");
+
+    function resizeCanvas(){
+      canvas.width = window.innerWidth * devicePixelRatio;
+      canvas.height = window.innerHeight * devicePixelRatio;
+      canvas.style.width = window.innerWidth + "px";
+      canvas.style.height = window.innerHeight + "px";
+      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    let confettiPieces = [];
+    let confettiRunning = false;
+
+    function makeConfettiBurst(count=180){
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const originX = w/2;
+      const originY = h/3;
+
+      const colors = ["#ff4d6d", "#ff758f", "#ff8fab", "#ffd6e0", "#ffffff", "#d6336c"];
+
+      for(let i=0;i<count;i++){
+        confettiPieces.push({
+          x: originX, y: originY,
+          vx: rand(-6, 6),
+          vy: rand(-10, -3),
+          g: rand(0.12, 0.22),
+          size: rand(4, 7),
+          rot: rand(0, Math.PI),
+          vr: rand(-0.2, 0.2),
+          color: colors[Math.floor(Math.random()*colors.length)],
+          life: rand(70, 120)
+        });
+      }
+    }
+
+    function drawConfetti(){
+      if(!confettiRunning) return;
+
+      ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
+      confettiPieces = confettiPieces.filter(p => p.life > 0);
+
+      for(const p of confettiPieces){
+        p.life -= 1;
+        p.vy += p.g;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.vr;
+
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size*1.4);
+        ctx.restore();
+      }
+
+      if(confettiPieces.length === 0){
+        confettiRunning = false;
+        ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
+        return;
+      }
+      requestAnimat
 
