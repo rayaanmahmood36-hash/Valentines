@@ -66,14 +66,14 @@
     #confettiCanvas{
       position:fixed;
       inset:0;
-      z-index:999;
+      z-index:2;
       pointer-events:none;
     }
 
     /* Main card */
     .card{
       position:relative;
-      z-index:2;
+      z-index:3;
       width:min(560px, 92vw);
       background:var(--card);
       backdrop-filter: blur(8px);
@@ -82,7 +82,7 @@
       box-shadow: 0 18px 60px rgba(0,0,0,0.18);
       padding:26px 22px 22px;
       text-align:center;
-      overflow:hidden; /* keep runaway button inside */
+      overflow:hidden;
     }
 
     h1{
@@ -143,7 +143,6 @@
       opacity:0.85;
     }
 
-    /* Photo */
     .photo-wrap{
       margin:16px auto 0;
       width:220px;
@@ -166,7 +165,7 @@
       to{ transform: scale(1); opacity: 1; }
     }
 
-    /* Tap-to-start overlay for audio */
+    /* ✅ Tap overlay (make it ALWAYS clickable) */
     #startOverlay{
       position:fixed;
       inset:0;
@@ -174,12 +173,18 @@
       align-items:center;
       justify-content:center;
       background: rgba(0,0,0,0.28);
-      z-index:1000;
+      z-index:2147483647;          /* MAX */
       padding:18px;
+      pointer-events:auto;          /* force */
+      touch-action: manipulation;   /* mobile taps */
     }
+    #startOverlay *{
+      pointer-events:auto;          /* force children clickable */
+    }
+
     .overlayCard{
       width:min(520px, 92vw);
-      background: rgba(255,255,255,0.9);
+      background: rgba(255,255,255,0.92);
       border-radius:22px;
       padding:20px 18px;
       text-align:center;
@@ -196,34 +201,28 @@
       background: var(--accent);
       color:#fff;
       width:100%;
+      touch-action: manipulation;
     }
 
-    /* Screens */
     .screen{ display:none; }
     #screen1{ display:block; }
   </style>
 </head>
 <body>
 
-  <!-- Confetti -->
   <canvas id="confettiCanvas"></canvas>
-
-  <!-- Floating hearts container -->
   <div id="hearts"></div>
 
-  <!-- Tap overlay (for starting audio) -->
   <div id="startOverlay">
     <div class="overlayCard">
       <h2>One tap before we begin 💗</h2>
       <p>Tap to start the page (and the song).</p>
-      <button class="overlayBtn" id="startBtn">Start 💞</button>
+      <button class="overlayBtn" id="startBtn" type="button">Start 💞</button>
       <div class="small">Tip: your photo must be named <b>us.jpg</b> in the repo.</div>
     </div>
   </div>
 
   <div class="card">
-
-    <!-- SCREEN 1 -->
     <div class="screen" id="screen1">
       <h1>Will you be my Valentine? ❤️</h1>
       <div class="btnrow">
@@ -233,199 +232,262 @@
       <div class="small">Made with love ✨</div>
     </div>
 
-    <!-- SCREEN 2 -->
     <div class="screen" id="screen2">
       <h1>Happy Valentine’s ❤️</h1>
       <p id="messageLine"></p>
-
       <div class="photo-wrap">
         <img id="herPhoto" src="" alt="Our photo">
       </div>
-
       <div class="btnrow">
         <button class="yes" id="toReasons">Next ➡️</button>
       </div>
-
       <div class="small">I love you 💘</div>
     </div>
 
-    <!-- SCREEN 3 -->
     <div class="screen" id="screen3">
       <h1>Reasons I Love You ❤️</h1>
       <ul id="reasonsList"></ul>
-
       <div class="btnrow">
         <button class="yes" id="toTime">Next ➡️</button>
       </div>
-
       <div class="small">If I wrote all the reasons, this site would crash 😭</div>
     </div>
 
-    <!-- SCREEN 4 -->
     <div class="screen" id="screen4">
       <h1>We’ve Been Together For 💕</h1>
       <p id="timeTogether"></p>
-
       <div class="btnrow">
         <button class="yes" id="toInfinity">Next ➡️</button>
       </div>
-
       <div class="small">And I still want more time with you.</div>
     </div>
 
-    <!-- SCREEN 5 -->
     <div class="screen" id="screen5">
       <h1>My Love For You Is</h1>
       <div style="font-size:72px; font-weight:900; color:var(--accent2); margin-top:6px;">∞</div>
       <p>Forever. Always. No matter what.</p>
       <div class="small">P.S. You just unlocked boyfriend-of-the-year edition 😏</div>
     </div>
-
   </div>
 
-  <!-- Background music -->
   <audio id="bgMusic" loop>
     <source src="Cold_Play_-_Yellow_3_(mp3.pm).mp3" type="audio/mpeg">
   </audio>
 
   <script>
-    /***********************
-     * CUSTOMIZE HERE
-     ***********************/
-    const CONFIG = {
-      messageLine:
-        "I love you forever. This may not be the valentines we wanted, but I will always try to make every valentine we have together special because you are so special. You are my forever, my best friend, my girlfriend. The most beautiful girl I've ever seen. You should know that you're amazing and you mean the world to me.",
-      herPhotoUrl: "us.jpg",     // make sure this file exists in the repo root
-      heartSpawnMs: 220,
-      startDate: "2024-07-09",   // CHANGE this to your real date (YYYY-MM-DD)
-      reasons: [
-        "You have the most beautiful smile in the world",
-        "You are the cutest girl in the world",
-        "You really take care of me in every way. Thank you zainab",
-        "You make me feel heard.",
-        "You understand me",
-        "You're my best friend, the person I can really be myself with",
-        "You’re so caring not just of me but everyone around you",
-        "You’re mine",
-        "You're so smart, capable, lovable"
-      ]
-    };
-
-    /***********************
-     * Start overlay + audio
-     ***********************/
+    // ✅ Make Start button work EVEN IF anything else breaks later
     const overlay = document.getElementById("startOverlay");
     const startBtn = document.getElementById("startBtn");
     const music = document.getElementById("bgMusic");
 
-    async function startExperience(){
+    async function startExperience(e){
+      if (e) { e.preventDefault(); e.stopPropagation(); }
       overlay.style.display = "none";
-      overlay.style.pointerEvents = "none";
       try{
         music.volume = 0.5;
         await music.play();
-      }catch(e){
-        console.log("Music blocked or missing:", e);
+      }catch(err){
+        console.log("Music blocked/missing (ok):", err);
       }
     }
-    startBtn.addEventListener("click", startExperience);
 
-    /***********************
-     * Floating hearts
-     ***********************/
-    const heartsLayer = document.getElementById("hearts");
-    function rand(min, max){ return Math.random() * (max - min) + min; }
+    // Listen to multiple tap types (mobile-safe)
+    ["click","pointerdown","touchstart"].forEach(evt => {
+      startBtn.addEventListener(evt, startExperience, { passive:false });
+    });
 
-    function spawnHeart(){
-      const heart = document.createElement("div");
-      heart.className = "heart";
+    // Everything else inside try so it can’t kill the Start button
+    try {
+      const CONFIG = {
+        messageLine:
+          "I love you forever. This may not be the valentines we wanted, but I will always try to make every valentine we have together special because you are so special. You are my forever, my best friend, my girlfriend. The most beautiful girl I've ever seen. You should know that you're amazing and you mean the world to me.",
+        herPhotoUrl: "us.jpg",
+        heartSpawnMs: 220,
+        startDate: "2024-07-09",
+        reasons: [
+          "You have the most beautiful smile in the world",
+          "You are the cutest girl in the world",
+          "You really take care of me in every way. Thank you zainab",
+          "You make me feel heard.",
+          "You understand me",
+          "You're my best friend, the person I can really be myself with",
+          "You’re so caring not just of me but everyone around you",
+          "You’re mine",
+          "You're so smart, capable, lovable"
+        ]
+      };
 
-      const size = rand(10, 18);
-      heart.style.width = size + "px";
-      heart.style.height = size + "px";
+      const heartsLayer = document.getElementById("hearts");
+      function rand(min, max){ return Math.random() * (max - min) + min; }
 
-      const left = rand(0, 100);
-      heart.style.left = left + "vw";
-      heart.style.bottom = "-20px";
+      function spawnHeart(){
+        const heart = document.createElement("div");
+        heart.className = "heart";
+        const size = rand(10, 18);
+        heart.style.width = size + "px";
+        heart.style.height = size + "px";
+        heart.style.left = rand(0, 100) + "vw";
+        heart.style.bottom = "-20px";
+        const duration = rand(4.5, 8.5);
+        heart.style.animationDuration = duration + "s";
+        const colors = ["#ff4d6d", "#ff758f", "#ff8fab", "#d6336c", "#ff3b6b"];
+        heart.style.background = colors[Math.floor(Math.random() * colors.length)];
+        heartsLayer.appendChild(heart);
+        setTimeout(() => heart.remove(), duration * 1000 + 200);
+      }
+      let heartInterval = setInterval(spawnHeart, CONFIG.heartSpawnMs);
 
-      const duration = rand(4.5, 8.5);
-      heart.style.animationDuration = duration + "s";
+      const canvas = document.getElementById("confettiCanvas");
+      const ctx = canvas.getContext("2d");
+      function resizeCanvas(){
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = window.innerWidth * dpr;
+        canvas.height = window.innerHeight * dpr;
+        canvas.style.width = window.innerWidth + "px";
+        canvas.style.height = window.innerHeight + "px";
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      window.addEventListener("resize", resizeCanvas);
+      resizeCanvas();
 
-      const colors = ["#ff4d6d", "#ff758f", "#ff8fab", "#d6336c", "#ff3b6b"];
-      heart.style.background = colors[Math.floor(Math.random() * colors.length)];
+      let confettiPieces = [];
+      let confettiRunning = false;
 
-      heartsLayer.appendChild(heart);
-      setTimeout(() => heart.remove(), duration * 1000 + 200);
-    }
-    let heartInterval = setInterval(spawnHeart, CONFIG.heartSpawnMs);
+      function makeConfettiBurst(count=180){
+        const originX = window.innerWidth/2;
+        const originY = window.innerHeight/3;
+        const colors = ["#ff4d6d", "#ff758f", "#ff8fab", "#ffd6e0", "#ffffff", "#d6336c"];
+        for(let i=0;i<count;i++){
+          confettiPieces.push({
+            x: originX, y: originY,
+            vx: rand(-6, 6),
+            vy: rand(-10, -3),
+            g: rand(0.12, 0.22),
+            size: rand(4, 7),
+            rot: rand(0, Math.PI),
+            vr: rand(-0.2, 0.2),
+            color: colors[Math.floor(Math.random()*colors.length)],
+            life: rand(70, 120)
+          });
+        }
+      }
 
-    /***********************
-     * Confetti (simple canvas)
-     ***********************/
-    const canvas = document.getElementById("confettiCanvas");
-    const ctx = canvas.getContext("2d");
+      function drawConfetti(){
+        if(!confettiRunning) return;
+        ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
+        confettiPieces = confettiPieces.filter(p => p.life > 0);
 
-    function resizeCanvas(){
-      canvas.width = window.innerWidth * devicePixelRatio;
-      canvas.height = window.innerHeight * devicePixelRatio;
-      canvas.style.width = window.innerWidth + "px";
-      canvas.style.height = window.innerHeight + "px";
-      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
-    }
-    window.addEventListener("resize", resizeCanvas);
-    resizeCanvas();
+        for(const p of confettiPieces){
+          p.life -= 1;
+          p.vy += p.g;
+          p.x += p.vx;
+          p.y += p.vy;
+          p.rot += p.vr;
 
-    let confettiPieces = [];
-    let confettiRunning = false;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size*1.4);
+          ctx.restore();
+        }
 
-    function makeConfettiBurst(count=180){
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      const originX = w/2;
-      const originY = h/3;
+        if(confettiPieces.length === 0){
+          confettiRunning = false;
+          ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
+          return;
+        }
+        requestAnimationFrame(drawConfetti);
+      }
 
-      const colors = ["#ff4d6d", "#ff758f", "#ff8fab", "#ffd6e0", "#ffffff", "#d6336c"];
+      function startConfetti(){
+        confettiRunning = true;
+        makeConfettiBurst();
+        requestAnimationFrame(drawConfetti);
+        setTimeout(() => { confettiPieces = []; }, 4000);
+      }
 
-      for(let i=0;i<count;i++){
-        confettiPieces.push({
-          x: originX, y: originY,
-          vx: rand(-6, 6),
-          vy: rand(-10, -3),
-          g: rand(0.12, 0.22),
-          size: rand(4, 7),
-          rot: rand(0, Math.PI),
-          vr: rand(-0.2, 0.2),
-          color: colors[Math.floor(Math.random()*colors.length)],
-          life: rand(70, 120)
+      function showScreen(id){
+        document.querySelectorAll(".screen").forEach(s => s.style.display = "none");
+        document.getElementById(id).style.display = "block";
+      }
+
+      function populateReasons(){
+        const list = document.getElementById("reasonsList");
+        list.innerHTML = "";
+        CONFIG.reasons.forEach(r => {
+          const li = document.createElement("li");
+          li.textContent = r;
+          list.appendChild(li);
         });
       }
+
+      function updateTimeTogether(){
+        const start = new Date(CONFIG.startDate);
+        const now = new Date();
+        const days = Math.floor((now - start) / (1000*60*60*24));
+        document.getElementById("timeTogether").textContent = `${days} days and counting ❤️`;
+      }
+
+      const yesBtn = document.getElementById("yesBtn");
+      const noBtn = document.getElementById("noBtn");
+      const card = document.querySelector(".card");
+
+      function goYes(){
+        showScreen("screen2");
+        document.getElementById("messageLine").textContent = CONFIG.messageLine;
+        document.getElementById("herPhoto").src = CONFIG.herPhotoUrl;
+
+        populateReasons();
+        updateTimeTogether();
+
+        startConfetti();
+
+        clearInterval(heartInterval);
+        heartInterval = setInterval(spawnHeart, 120);
+        setTimeout(() => {
+          clearInterval(heartInterval);
+          heartInterval = setInterval(spawnHeart, CONFIG.heartSpawnMs);
+        }, 3500);
+      }
+      yesBtn.addEventListener("click", goYes);
+
+      document.getElementById("toReasons").addEventListener("click", () => showScreen("screen3"));
+      document.getElementById("toTime").addEventListener("click", () => showScreen("screen4"));
+      document.getElementById("toInfinity").addEventListener("click", () => showScreen("screen5"));
+
+      // Evil NO button
+      function teleportNo(){
+        const cardRect = card.getBoundingClientRect();
+        const pad = 16;
+        const maxX = cardRect.width - noBtn.offsetWidth - pad;
+        const maxY = cardRect.height - noBtn.offsetHeight - pad;
+        const x = pad + Math.random() * Math.max(1, maxX - pad);
+        const y = pad + Math.random() * Math.max(1, maxY - pad);
+        noBtn.style.position = "absolute";
+        noBtn.style.left = x + "px";
+        noBtn.style.top = y + "px";
+      }
+
+      card.addEventListener("pointermove", (e) => {
+        if (document.getElementById("screen1").style.display === "none") return;
+        const b = noBtn.getBoundingClientRect();
+        const dx = (b.left + b.width/2) - e.clientX;
+        const dy = (b.top + b.height/2) - e.clientY;
+        if(Math.hypot(dx, dy) < 140) teleportNo();
+      });
+
+      noBtn.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        teleportNo();
+      });
+
+      teleportNo();
+    } catch (err) {
+      console.log("Non-fatal script error:", err);
     }
-
-    function drawConfetti(){
-      if(!confettiRunning) return;
-
-      ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
-      confettiPieces = confettiPieces.filter(p => p.life > 0);
-
-      for(const p of confettiPieces){
-        p.life -= 1;
-        p.vy += p.g;
-        p.x += p.vx;
-        p.y += p.vy;
-        p.rot += p.vr;
-
-        ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.rotate(p.rot);
-        ctx.fillStyle = p.color;
-        ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size*1.4);
-        ctx.restore();
-      }
-
-      if(confettiPieces.length === 0){
-        confettiRunning = false;
-        ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
-        return;
-      }
-      requestAnimat
+  </script>
+</body>
+</html>
 
