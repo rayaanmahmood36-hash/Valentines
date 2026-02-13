@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>For You ❤️</title>
   <style>
+    #startOverlay, .overlayCard, #startBtn{ pointer-events: auto !important; }
+
     :root{
       --bg1:#ffdde1;
       --bg2:#ee9ca7;
@@ -27,7 +29,6 @@
       overflow:hidden;
     }
 
-    /* Floating hearts layer */
     #hearts{
       position:fixed;
       inset:0;
@@ -62,7 +63,6 @@
       100%{ transform:translateY(-110vh) rotate(45deg); opacity:0; }
     }
 
-    /* Confetti canvas */
     #confettiCanvas{
       position:fixed;
       inset:0;
@@ -70,7 +70,6 @@
       pointer-events:none;
     }
 
-    /* Main card */
     .card{
       position:relative;
       z-index:3;
@@ -158,7 +157,6 @@
       to{ transform: scale(1); opacity: 1; }
     }
 
-    /* Start overlay */
     #startOverlay{
       position:fixed;
       inset:0;
@@ -169,6 +167,7 @@
       z-index:2147483647;
       padding:18px;
       pointer-events:auto;
+      touch-action: manipulation;
     }
     #startOverlay *{ pointer-events:auto; }
 
@@ -186,6 +185,7 @@
       background: var(--accent);
       color:#fff;
       width:100%;
+      touch-action: manipulation;
     }
 
     .screen{ display:none; }
@@ -199,10 +199,10 @@
 
   <div id="startOverlay">
     <div class="overlayCard">
-      <h2>Tap to begin 💗</h2>
-      <p>Click Start to open the page (and the song).</p>
+      <h2>One tap before we begin 💗</h2>
+      <p>Tap to start the page (and the song).</p>
       <button class="overlayBtn" id="startBtn" type="button">Start 💞</button>
-      <div class="small">Put <b>us.jpg</b> + your MP3 in the repo root.</div>
+      <div class="small">Tip: your photo must be named <b>us.jpg</b> in the repo.</div>
     </div>
   </div>
 
@@ -250,7 +250,7 @@
       <h1>My Love For You Is</h1>
       <div style="font-size:72px; font-weight:900; color:var(--accent2); margin-top:6px;">∞</div>
       <p>Forever. Always. No matter what.</p>
-      <!-- ✅ removed your “P.S.” line -->
+      <!-- ✅ removed the P.S. line -->
     </div>
   </div>
 
@@ -258,64 +258,61 @@
     <source src="Cold_Play_-_Yellow_3_(mp3.pm).mp3" type="audio/mpeg">
   </audio>
 
-  <!-- ✅ Script 1: Start button ONLY (can’t be broken by other code) -->
   <script>
-    (function(){
-      const overlay = document.getElementById("startOverlay");
-      const startBtn = document.getElementById("startBtn");
-      const music = document.getElementById("bgMusic");
+    // ✅ Make Start button work EVEN IF anything else breaks later
+    const overlay = document.getElementById("startOverlay");
+    const startBtn = document.getElementById("startBtn");
+    const music = document.getElementById("bgMusic");
 
-      function fadeVolume(target=0.5, ms=1400){
-        const start = 0.08;              // low first
-        const steps = 30;
-        let i = 0;
-        music.volume = start;
-        const step = (target - start) / steps;
-        const t = setInterval(() => {
-          i++;
-          music.volume = Math.min(target, start + step * i);
-          if (i >= steps) clearInterval(t);
-        }, ms / steps);
+    // ✅ smooth fade: low -> 0.5 (still ends at 0.5)
+    function fadeToHalfVolume(durationMs = 1400){
+      const startVol = 0.08;
+      const targetVol = 0.5;
+      const steps = 28;
+      let i = 0;
+      music.volume = startVol;
+
+      const step = (targetVol - startVol) / steps;
+      const timer = setInterval(() => {
+        i++;
+        music.volume = Math.min(targetVol, startVol + step * i);
+        if (i >= steps) clearInterval(timer);
+      }, durationMs / steps);
+    }
+
+    async function startExperience(e){
+      if (e) { e.preventDefault(); e.stopPropagation(); }
+      overlay.style.display = "none";
+
+      try{
+        // start low, then fade up to 0.5
+        music.volume = 0.08;
+        await music.play();
+        fadeToHalfVolume(1400);
+      }catch(err){
+        console.log("Music blocked/missing (ok):", err);
       }
+    }
 
-      async function startExperience(e){
-        if (e){ e.preventDefault(); e.stopPropagation(); }
-        overlay.style.display = "none";
+    // Laptop + mobile safe
+    ["click","pointerup","touchstart"].forEach(evt => {
+      startBtn.addEventListener(evt, startExperience, { capture:true, passive:false });
+      overlay.addEventListener(evt, startExperience, { capture:true, passive:false });
+    });
 
-        try{
-          await music.play();
-          fadeVolume(0.5, 1400); // low → gradually to 0.5
-        }catch(err){
-          console.log("Music blocked/missing (ok):", err);
-        }
-      }
-
-      // Laptop + mobile
-      ["click","pointerup","touchstart"].forEach(evt => {
-        startBtn.addEventListener(evt, startExperience, { capture:true, passive:false });
-      });
-
-      // optional: clicking anywhere on overlay works too
-      ["click","pointerup","touchstart"].forEach(evt => {
-        overlay.addEventListener(evt, startExperience, { capture:true, passive:false });
-      });
-    })();
-  </script>
-
-  <!-- ✅ Script 2: Everything else (safe) -->
-  <script>
-    (function(){
+    // Everything else inside try so it can’t kill the Start button
+    try {
       const CONFIG = {
         messageLine:
           "I love you forever. This may not be the valentines we wanted, but I will always try to make every valentine we have together special because you are so special. You are my forever, my best friend, my girlfriend. The most beautiful girl I've ever seen. You should know that you're amazing and you mean the world to me.",
         herPhotoUrl: "us.jpg",
         heartSpawnMs: 220,
-        startDate: "2024-07-09", // change
+        startDate: "2024-07-09",
         reasons: [
           "You have the most beautiful smile in the world",
           "You are the cutest girl in the world",
-          "You really take care of me in every way. Thank you Zainab",
-          "You make me feel heard",
+          "You really take care of me in every way. Thank you zainab",
+          "You make me feel heard.",
           "You understand me",
           "You're my best friend, the person I can really be myself with",
           "You’re so caring not just of me but everyone around you",
@@ -324,110 +321,130 @@
         ]
       };
 
-      // Hearts
+      // ✅ Easter eggs (works on laptop)
+      // Tap-count: counts clicks anywhere AFTER start overlay is gone
+      let taps = 0;
+      document.addEventListener("click", () => {
+        if (overlay.style.display !== "none") return; // only after Start
+        taps++;
+        if (taps === 12) alert("Stop tapping 😭 I already love you.");
+        if (taps === 25) alert("Unlocked: unlimited hugs & kisses when we meet 😌");
+        if (taps === 40) alert("Okay okay… meri jaan ho tum ❤️");
+      });
+
+      // Typing easter egg: type "zainab" anywhere (no textbox needed)
+      let typed = "";
+      document.addEventListener("keydown", (e) => {
+        if (overlay.style.display !== "none") return; // only after Start
+        typed += (e.key || "").toLowerCase();
+        if (typed.length > 20) typed = typed.slice(-20);
+        if (typed.includes("zainab")) {
+          alert("Easter egg: zainab is the most beautiful girl in the whole wide world ✨");
+          typed = "";
+        }
+      });
+
       const heartsLayer = document.getElementById("hearts");
-      const rand = (min,max)=>Math.random()*(max-min)+min;
+      function rand(min, max){ return Math.random() * (max - min) + min; }
 
       function spawnHeart(){
         const heart = document.createElement("div");
         heart.className = "heart";
-        const size = rand(10,18);
-        heart.style.width = size+"px";
-        heart.style.height = size+"px";
-        heart.style.left = rand(0,100)+"vw";
+        const size = rand(10, 18);
+        heart.style.width = size + "px";
+        heart.style.height = size + "px";
+        heart.style.left = rand(0, 100) + "vw";
         heart.style.bottom = "-20px";
-        const duration = rand(4.5,8.5);
-        heart.style.animationDuration = duration+"s";
-        const colors = ["#ff4d6d","#ff758f","#ff8fab","#d6336c","#ff3b6b"];
-        heart.style.background = colors[Math.floor(Math.random()*colors.length)];
+        const duration = rand(4.5, 8.5);
+        heart.style.animationDuration = duration + "s";
+        const colors = ["#ff4d6d", "#ff758f", "#ff8fab", "#d6336c", "#ff3b6b"];
+        heart.style.background = colors[Math.floor(Math.random() * colors.length)];
         heartsLayer.appendChild(heart);
-        setTimeout(()=>heart.remove(), duration*1000+200);
+        setTimeout(() => heart.remove(), duration * 1000 + 200);
       }
       let heartInterval = setInterval(spawnHeart, CONFIG.heartSpawnMs);
 
-      // Confetti
       const canvas = document.getElementById("confettiCanvas");
       const ctx = canvas.getContext("2d");
       function resizeCanvas(){
         const dpr = window.devicePixelRatio || 1;
-        canvas.width = innerWidth * dpr;
-        canvas.height = innerHeight * dpr;
-        canvas.style.width = innerWidth+"px";
-        canvas.style.height = innerHeight+"px";
-        ctx.setTransform(dpr,0,0,dpr,0,0);
+        canvas.width = window.innerWidth * dpr;
+        canvas.height = window.innerHeight * dpr;
+        canvas.style.width = window.innerWidth + "px";
+        canvas.style.height = window.innerHeight + "px";
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       }
-      addEventListener("resize", resizeCanvas);
+      window.addEventListener("resize", resizeCanvas);
       resizeCanvas();
 
       let confettiPieces = [];
       let confettiRunning = false;
 
       function makeConfettiBurst(count=180){
-        const originX = innerWidth/2;
-        const originY = innerHeight/3;
-        const colors = ["#ff4d6d","#ff758f","#ff8fab","#ffd6e0","#ffffff","#d6336c"];
+        const originX = window.innerWidth/2;
+        const originY = window.innerHeight/3;
+        const colors = ["#ff4d6d", "#ff758f", "#ff8fab", "#ffd6e0", "#ffffff", "#d6336c"];
         for(let i=0;i<count;i++){
           confettiPieces.push({
             x: originX, y: originY,
-            vx: rand(-6,6),
-            vy: rand(-10,-3),
-            g: rand(0.12,0.22),
-            size: rand(4,7),
-            rot: rand(0,Math.PI),
-            vr: rand(-0.2,0.2),
+            vx: rand(-6, 6),
+            vy: rand(-10, -3),
+            g: rand(0.12, 0.22),
+            size: rand(4, 7),
+            rot: rand(0, Math.PI),
+            vr: rand(-0.2, 0.2),
             color: colors[Math.floor(Math.random()*colors.length)],
-            life: rand(70,120)
+            life: rand(70, 120)
           });
         }
       }
 
       function drawConfetti(){
         if(!confettiRunning) return;
-        ctx.clearRect(0,0,innerWidth,innerHeight);
-        confettiPieces = confettiPieces.filter(p=>p.life>0);
+        ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
+        confettiPieces = confettiPieces.filter(p => p.life > 0);
 
         for(const p of confettiPieces){
-          p.life--;
+          p.life -= 1;
           p.vy += p.g;
           p.x += p.vx;
           p.y += p.vy;
           p.rot += p.vr;
 
           ctx.save();
-          ctx.translate(p.x,p.y);
+          ctx.translate(p.x, p.y);
           ctx.rotate(p.rot);
           ctx.fillStyle = p.color;
-          ctx.fillRect(-p.size/2,-p.size/2,p.size,p.size*1.4);
+          ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size*1.4);
           ctx.restore();
         }
 
-        if(confettiPieces.length===0){
-          confettiRunning=false;
-          ctx.clearRect(0,0,innerWidth,innerHeight);
+        if(confettiPieces.length === 0){
+          confettiRunning = false;
+          ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
           return;
         }
         requestAnimationFrame(drawConfetti);
       }
 
       function startConfetti(){
-        confettiRunning=true;
+        confettiRunning = true;
         makeConfettiBurst();
         requestAnimationFrame(drawConfetti);
-        setTimeout(()=>{ confettiPieces=[]; }, 4000);
+        setTimeout(() => { confettiPieces = []; }, 4000);
       }
 
-      // Screens
       function showScreen(id){
-        document.querySelectorAll(".screen").forEach(s=>s.style.display="none");
-        document.getElementById(id).style.display="block";
+        document.querySelectorAll(".screen").forEach(s => s.style.display = "none");
+        document.getElementById(id).style.display = "block";
       }
 
       function populateReasons(){
         const list = document.getElementById("reasonsList");
         list.innerHTML = "";
-        CONFIG.reasons.forEach(r=>{
-          const li=document.createElement("li");
-          li.textContent=r;
+        CONFIG.reasons.forEach(r => {
+          const li = document.createElement("li");
+          li.textContent = r;
           list.appendChild(li);
         });
       }
@@ -439,12 +456,11 @@
         document.getElementById("timeTogether").textContent = `${days} days and counting ❤️`;
       }
 
-      // Buttons
       const yesBtn = document.getElementById("yesBtn");
-      const noBtn  = document.getElementById("noBtn");
-      const card   = document.querySelector(".card");
+      const noBtn = document.getElementById("noBtn");
+      const card = document.querySelector(".card");
 
-      yesBtn.addEventListener("click", ()=>{
+      function goYes(){
         showScreen("screen2");
         document.getElementById("messageLine").textContent = CONFIG.messageLine;
         document.getElementById("herPhoto").src = CONFIG.herPhotoUrl;
@@ -456,71 +472,47 @@
 
         clearInterval(heartInterval);
         heartInterval = setInterval(spawnHeart, 120);
-        setTimeout(()=>{
+        setTimeout(() => {
           clearInterval(heartInterval);
           heartInterval = setInterval(spawnHeart, CONFIG.heartSpawnMs);
         }, 3500);
-      });
+      }
+      yesBtn.addEventListener("click", goYes);
 
-      document.getElementById("toReasons").addEventListener("click", ()=>showScreen("screen3"));
-      document.getElementById("toTime").addEventListener("click", ()=>showScreen("screen4"));
-      document.getElementById("toInfinity").addEventListener("click", ()=>showScreen("screen5"));
+      document.getElementById("toReasons").addEventListener("click", () => showScreen("screen3"));
+      document.getElementById("toTime").addEventListener("click", () => showScreen("screen4"));
+      document.getElementById("toInfinity").addEventListener("click", () => showScreen("screen5"));
 
-      // Evil NO button
       function teleportNo(){
-        const rect = card.getBoundingClientRect();
+        const cardRect = card.getBoundingClientRect();
         const pad = 16;
-        const maxX = rect.width - noBtn.offsetWidth - pad;
-        const maxY = rect.height - noBtn.offsetHeight - pad;
+        const maxX = cardRect.width - noBtn.offsetWidth - pad;
+        const maxY = cardRect.height - noBtn.offsetHeight - pad;
         const x = pad + Math.random() * Math.max(1, maxX - pad);
         const y = pad + Math.random() * Math.max(1, maxY - pad);
-        noBtn.style.position="absolute";
-        noBtn.style.left = x+"px";
-        noBtn.style.top  = y+"px";
+        noBtn.style.position = "absolute";
+        noBtn.style.left = x + "px";
+        noBtn.style.top = y + "px";
       }
-      teleportNo();
 
-      card.addEventListener("pointermove",(e)=>{
+      card.addEventListener("pointermove", (e) => {
         if (document.getElementById("screen1").style.display === "none") return;
         const b = noBtn.getBoundingClientRect();
         const dx = (b.left + b.width/2) - e.clientX;
-        const dy = (b.top  + b.height/2) - e.clientY;
-        if (Math.hypot(dx,dy) < 140) teleportNo();
+        const dy = (b.top + b.height/2) - e.clientY;
+        if(Math.hypot(dx, dy) < 140) teleportNo();
       });
 
-      noBtn.addEventListener("pointerdown",(e)=>{
+      noBtn.addEventListener("pointerdown", (e) => {
         e.preventDefault();
         e.stopPropagation();
         teleportNo();
       });
 
-      // ✅ Easter eggs (these work now)
-      // 1) 12 clicks anywhere AFTER Start
-      let taps = 0;
-      document.addEventListener("click", () => {
-        if (document.getElementById("startOverlay").style.display !== "none") return;
-        taps++;
-        if (taps === 12) alert("Stop tapping 😭 I already love you.");
-        if (taps === 25) alert("Unlocked: unlimited hugs & kisses when we meet 😌");
-        if (taps === 40) alert("Okay okay… meri jaan ho tum ❤️");
-      });
-
-      // 2) Type "zainab" (works anywhere, no textbox needed)
-      let typed = "";
-      document.addEventListener("keydown", (e) => {
-        if (document.getElementById("startOverlay").style.display !== "none") return;
-        typed += (e.key || "").toLowerCase();
-        if (typed.length > 20) typed = typed.slice(-20);
-        if (typed.includes("zainab")) {
-          alert("Easter egg: zainab is the most beautiful girl in the whole wide world ✨");
-          typed = "";
-        }
-      });
-    })();
-  </script>
-</body>
-</html>
-
+      teleportNo();
+    } catch (err) {
+      console.log("Non-fatal script error:", err);
+    }
   </script>
 </body>
 </html>
