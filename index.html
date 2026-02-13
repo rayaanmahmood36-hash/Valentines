@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>For You ❤️</title>
   <style>
-    #startOverlay, .overlayCard, #startBtn{ pointer-events: auto !important; }
-
     :root{
       --bg1:#ffdde1;
       --bg2:#ee9ca7;
@@ -129,21 +127,9 @@
     }
     button:active{ transform: translateY(1px) scale(0.99); }
 
-    .yes{
-      background: var(--accent);
-      color:#fff;
-    }
-    .no{
-      background: #6c757d;
-      color:#fff;
-      position:relative;
-    }
-
-    .small{
-      margin-top:14px;
-      font-size:13px;
-      opacity:0.85;
-    }
+    .yes{ background: var(--accent); color:#fff; }
+    .no{ background: #6c757d; color:#fff; position:relative; }
+    .small{ margin-top:14px; font-size:13px; opacity:0.85; }
 
     .photo-wrap{
       margin:16px auto 0;
@@ -167,7 +153,7 @@
       to{ transform: scale(1); opacity: 1; }
     }
 
-    /* ✅ Tap overlay (make it ALWAYS clickable) */
+    /* Start overlay */
     #startOverlay{
       position:fixed;
       inset:0;
@@ -178,7 +164,6 @@
       z-index:2147483647;
       padding:18px;
       pointer-events:auto;
-      touch-action: manipulation;
     }
     #startOverlay *{ pointer-events:auto; }
 
@@ -190,20 +175,27 @@
       text-align:center;
       box-shadow: 0 18px 60px rgba(0,0,0,0.25);
     }
-    .overlayCard h2{
-      margin:0 0 8px;
-      color: var(--accent2);
-    }
+    .overlayCard h2{ margin:0 0 8px; color: var(--accent2); }
     .overlayCard p{ margin:0 0 14px; }
-    .overlayBtn{
-      background: var(--accent);
-      color:#fff;
-      width:100%;
-      touch-action: manipulation;
-    }
+    .overlayBtn{ background: var(--accent); color:#fff; width:100%; }
 
     .screen{ display:none; }
     #screen1{ display:block; }
+
+    /* Toast for easter eggs */
+    #jokeToast{
+      position:fixed;
+      left:50%;
+      bottom:24px;
+      transform:translateX(-50%);
+      z-index:2147483647;
+      padding:12px 14px;
+      border-radius:14px;
+      background: rgba(255,255,255,0.92);
+      border:1px solid rgba(0,0,0,0.08);
+      box-shadow: 0 14px 40px rgba(0,0,0,0.18);
+      font-weight:800;
+    }
   </style>
 </head>
 <body>
@@ -213,10 +205,10 @@
 
   <div id="startOverlay">
     <div class="overlayCard">
-      <h2>One tap before we begin 💗</h2>
-      <p>Tap to start the page (and the song).</p>
+      <h2>Tap to start 💗</h2>
+      <p>(Needed so music can play)</p>
       <button class="overlayBtn" id="startBtn" type="button">Start 💞</button>
-      <div class="small">Tip: your photo must be named <b>us.jpg</b> in the repo.</div>
+      <div class="small">Make sure <b>us.jpg</b> + your <b>.mp3</b> are in the repo root.</div>
     </div>
   </div>
 
@@ -260,11 +252,11 @@
       <div class="small">And I still want more time with you.</div>
     </div>
 
-    <!-- ✅ PS line removed here -->
     <div class="screen" id="screen5">
       <h1>My Love For You Is</h1>
       <div style="font-size:72px; font-weight:900; color:var(--accent2); margin-top:6px;">∞</div>
       <p>Forever. Always. No matter what.</p>
+      <!-- removed the “P.S boyfriend…” line -->
     </div>
   </div>
 
@@ -273,271 +265,267 @@
   </audio>
 
   <script>
-    /***********************
-     * Start overlay + audio (CLICK ANYWHERE + FADE IN to 0.5)
-     ***********************/
+    // Start overlay + audio (works on laptop)
     const overlay = document.getElementById("startOverlay");
     const startBtn = document.getElementById("startBtn");
     const music = document.getElementById("bgMusic");
 
-    function hideOverlay(){
-      overlay.style.display = "none";
-      overlay.style.pointerEvents = "none";
+    function rampVolume(from, to, ms){
+      const start = performance.now();
+      function step(t){
+        const p = Math.min(1, (t - start) / ms);
+        music.volume = from + (to - from) * p;
+        if (p < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
     }
 
     async function startExperience(e){
-      if (e){
-        e.preventDefault();
-        e.stopPropagation();
-      }
-
-      hideOverlay();
+      if (e){ e.preventDefault(); e.stopPropagation(); }
+      overlay.style.display = "none";
 
       try{
-        // start very quiet
-        music.volume = 0.08;
-        // keep currentTime if you want it to resume; set to 0 for restart
-        // music.currentTime = 0;
-
+        music.volume = 0.12;      // start low
         await music.play();
-
-        // fade up to 0.5
-        const target = 0.5;
-        const step = 0.02;
-        const speed = 120;
-
-        const fade = setInterval(() => {
-          music.volume = Math.min(target, music.volume + step);
-          if (music.volume >= target) clearInterval(fade);
-        }, speed);
-
+        rampVolume(0.12, 0.5, 3000);  // then slowly go to 0.5
       }catch(err){
-        console.log("Music blocked/missing:", err);
+        console.log("Music blocked/missing (ok):", err);
       }
     }
+    startBtn.addEventListener("click", startExperience);
+    overlay.addEventListener("click", startExperience);
 
-    // ✅ button + anywhere on overlay works (laptop + mobile)
-    ["click","pointerup","pointerdown","touchstart"].forEach(evt => {
-      startBtn.addEventListener(evt, startExperience, { capture:true, passive:false });
-      overlay.addEventListener(evt, startExperience, { capture:true, passive:false });
-    });
+    // Toast helper (for easter eggs)
+    function showJoke(msg){
+      const existing = document.getElementById("jokeToast");
+      if (existing) existing.remove();
 
-    // Everything else inside try so Start can’t break
-    try {
-      const CONFIG = {
-        messageLine:
-          "I love you forever. This may not be the valentines we wanted, but I will always try to make every valentine we have together special because you are so special. You are my forever, my best friend, my girlfriend. The most beautiful girl I've ever seen. You should know that you're amazing and you mean the world to me.",
-        herPhotoUrl: "us.jpg",
-        heartSpawnMs: 220,
-        startDate: "2024-07-09",
-        reasons: [
-          "You have the most beautiful smile in the world",
-          "You are the cutest girl in the world",
-          "You really take care of me in every way. Thank you zainab",
-          "You make me feel heard.",
-          "You understand me",
-          "You're my best friend, the person I can really be myself with",
-          "You’re so caring not just of me but everyone around you",
-          "You’re mine",
-          "You're so smart, capable, lovable"
-        ]
-      };
+      const toast = document.createElement("div");
+      toast.id = "jokeToast";
+      toast.textContent = msg;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2600);
+    }
 
-      const heartsLayer = document.getElementById("hearts");
-      function rand(min, max){ return Math.random() * (max - min) + min; }
+    // Everything else
+    const CONFIG = {
+      messageLine:
+        "I love you forever. This may not be the valentines we wanted, but I will always try to make every valentine we have together special because you are so special. You are my forever, my best friend, my girlfriend. The most beautiful girl I've ever seen. You should know that you're amazing and you mean the world to me.",
+      herPhotoUrl: "us.jpg",
+      heartSpawnMs: 220,
+      startDate: "2024-07-09",
+      reasons: [
+        "You have the most beautiful smile in the world",
+        "You are the cutest girl in the world",
+        "You really take care of me in every way. Thank you zainab",
+        "You make me feel heard.",
+        "You understand me",
+        "You're my best friend, the person I can really be myself with",
+        "You’re so caring not just of me but everyone around you",
+        "You’re mine",
+        "You're so smart, capable, lovable"
+      ]
+    };
 
-      function spawnHeart(){
-        const heart = document.createElement("div");
-        heart.className = "heart";
-        const size = rand(10, 18);
-        heart.style.width = size + "px";
-        heart.style.height = size + "px";
-        heart.style.left = rand(0, 100) + "vw";
-        heart.style.bottom = "-20px";
-        const duration = rand(4.5, 8.5);
-        heart.style.animationDuration = duration + "s";
-        const colors = ["#ff4d6d", "#ff758f", "#ff8fab", "#d6336c", "#ff3b6b"];
-        heart.style.background = colors[Math.floor(Math.random() * colors.length)];
-        heartsLayer.appendChild(heart);
-        setTimeout(() => heart.remove(), duration * 1000 + 200);
-      }
-      let heartInterval = setInterval(spawnHeart, CONFIG.heartSpawnMs);
+    // Floating hearts
+    const heartsLayer = document.getElementById("hearts");
+    function rand(min, max){ return Math.random() * (max - min) + min; }
 
-      const canvas = document.getElementById("confettiCanvas");
-      const ctx = canvas.getContext("2d");
-      function resizeCanvas(){
-        const dpr = window.devicePixelRatio || 1;
-        canvas.width = window.innerWidth * dpr;
-        canvas.height = window.innerHeight * dpr;
-        canvas.style.width = window.innerWidth + "px";
-        canvas.style.height = window.innerHeight + "px";
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      }
-      window.addEventListener("resize", resizeCanvas);
-      resizeCanvas();
+    function spawnHeart(){
+      const heart = document.createElement("div");
+      heart.className = "heart";
+      const size = rand(10, 18);
+      heart.style.width = size + "px";
+      heart.style.height = size + "px";
+      heart.style.left = rand(0, 100) + "vw";
+      heart.style.bottom = "-20px";
+      const duration = rand(4.5, 8.5);
+      heart.style.animationDuration = duration + "s";
+      const colors = ["#ff4d6d", "#ff758f", "#ff8fab", "#d6336c", "#ff3b6b"];
+      heart.style.background = colors[Math.floor(Math.random() * colors.length)];
+      heartsLayer.appendChild(heart);
+      setTimeout(() => heart.remove(), duration * 1000 + 200);
+    }
+    let heartInterval = setInterval(spawnHeart, CONFIG.heartSpawnMs);
 
-      let confettiPieces = [];
-      let confettiRunning = false;
+    // Confetti
+    const canvas = document.getElementById("confettiCanvas");
+    const ctx = canvas.getContext("2d");
 
-      function makeConfettiBurst(count=180){
-        const originX = window.innerWidth/2;
-        const originY = window.innerHeight/3;
-        const colors = ["#ff4d6d", "#ff758f", "#ff8fab", "#ffd6e0", "#ffffff", "#d6336c"];
-        for(let i=0;i<count;i++){
-          confettiPieces.push({
-            x: originX, y: originY,
-            vx: rand(-6, 6),
-            vy: rand(-10, -3),
-            g: rand(0.12, 0.22),
-            size: rand(4, 7),
-            rot: rand(0, Math.PI),
-            vr: rand(-0.2, 0.2),
-            color: colors[Math.floor(Math.random()*colors.length)],
-            life: rand(70, 120)
-          });
-        }
-      }
+    function resizeCanvas(){
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      canvas.style.width = window.innerWidth + "px";
+      canvas.style.height = window.innerHeight + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
 
-      function drawConfetti(){
-        if(!confettiRunning) return;
-        ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
-        confettiPieces = confettiPieces.filter(p => p.life > 0);
+    let confettiPieces = [];
+    let confettiRunning = false;
 
-        for(const p of confettiPieces){
-          p.life -= 1;
-          p.vy += p.g;
-          p.x += p.vx;
-          p.y += p.vy;
-          p.rot += p.vr;
-
-          ctx.save();
-          ctx.translate(p.x, p.y);
-          ctx.rotate(p.rot);
-          ctx.fillStyle = p.color;
-          ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size*1.4);
-          ctx.restore();
-        }
-
-        if(confettiPieces.length === 0){
-          confettiRunning = false;
-          ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
-          return;
-        }
-        requestAnimationFrame(drawConfetti);
-      }
-
-      function startConfetti(){
-        confettiRunning = true;
-        makeConfettiBurst();
-        requestAnimationFrame(drawConfetti);
-        setTimeout(() => { confettiPieces = []; }, 4000);
-      }
-
-      function showScreen(id){
-        document.querySelectorAll(".screen").forEach(s => s.style.display = "none");
-        document.getElementById(id).style.display = "block";
-      }
-
-      function populateReasons(){
-        const list = document.getElementById("reasonsList");
-        list.innerHTML = "";
-        CONFIG.reasons.forEach(r => {
-          const li = document.createElement("li");
-          li.textContent = r;
-          list.appendChild(li);
+    function makeConfettiBurst(count=180){
+      const originX = window.innerWidth/2;
+      const originY = window.innerHeight/3;
+      const colors = ["#ff4d6d", "#ff758f", "#ff8fab", "#ffd6e0", "#ffffff", "#d6336c"];
+      for(let i=0;i<count;i++){
+        confettiPieces.push({
+          x: originX, y: originY,
+          vx: rand(-6, 6),
+          vy: rand(-10, -3),
+          g: rand(0.12, 0.22),
+          size: rand(4, 7),
+          rot: rand(0, Math.PI),
+          vr: rand(-0.2, 0.2),
+          color: colors[Math.floor(Math.random()*colors.length)],
+          life: rand(70, 120)
         });
       }
-
-      function updateTimeTogether(){
-        const start = new Date(CONFIG.startDate);
-        const now = new Date();
-        const days = Math.floor((now - start) / (1000*60*60*24));
-        document.getElementById("timeTogether").textContent = `${days} days and counting ❤️`;
-      }
-
-      const yesBtn = document.getElementById("yesBtn");
-      const noBtn = document.getElementById("noBtn");
-      const card = document.querySelector(".card");
-
-      function goYes(){
-        showScreen("screen2");
-        document.getElementById("messageLine").textContent = CONFIG.messageLine;
-        document.getElementById("herPhoto").src = CONFIG.herPhotoUrl;
-
-        populateReasons();
-        updateTimeTogether();
-
-        startConfetti();
-
-        clearInterval(heartInterval);
-        heartInterval = setInterval(spawnHeart, 120);
-        setTimeout(() => {
-          clearInterval(heartInterval);
-          heartInterval = setInterval(spawnHeart, CONFIG.heartSpawnMs);
-        }, 3500);
-      }
-      yesBtn.addEventListener("click", goYes);
-
-      document.getElementById("toReasons").addEventListener("click", () => showScreen("screen3"));
-      document.getElementById("toTime").addEventListener("click", () => showScreen("screen4"));
-      document.getElementById("toInfinity").addEventListener("click", () => showScreen("screen5"));
-
-      // Evil NO button
-      function teleportNo(){
-        const cardRect = card.getBoundingClientRect();
-        const pad = 16;
-        const maxX = cardRect.width - noBtn.offsetWidth - pad;
-        const maxY = cardRect.height - noBtn.offsetHeight - pad;
-        const x = pad + Math.random() * Math.max(1, maxX - pad);
-        const y = pad + Math.random() * Math.max(1, maxY - pad);
-        noBtn.style.position = "absolute";
-        noBtn.style.left = x + "px";
-        noBtn.style.top = y + "px";
-      }
-
-      card.addEventListener("pointermove", (e) => {
-        if (document.getElementById("screen1").style.display === "none") return;
-        const b = noBtn.getBoundingClientRect();
-        const dx = (b.left + b.width/2) - e.clientX;
-        const dy = (b.top + b.height/2) - e.clientY;
-        if(Math.hypot(dx, dy) < 140) teleportNo();
-      });
-
-      noBtn.addEventListener("pointerdown", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        teleportNo();
-      });
-
-      teleportNo();
-    let typed = "";
-document.addEventListener("keydown", (e) => {
-  typed += (e.key || "").toLowerCase();
-  if (typed.length > 12) typed = typed.slice(-12);
-
-  if (typed.includes("zainab")) {
-    showJoke("Easter egg: zainab is the prettiest girl in the universe ✨");
-    typed = "";
-  }
-});
-let typed = "";
-document.addEventListener("keydown", (e) => {
-  typed += (e.key || "").toLowerCase();
-  if (typed.length > 12) typed = typed.slice(-12);
-
-  if (typed.includes("zainab")) {
-    showJoke("Easter egg: zainab is the prettiest girl in the universe ✨");
-    typed = "";
-  }
-});
-
-    
-    } catch (err) {
-      console.log("Non-fatal script error:", err);
     }
-    
+
+    function drawConfetti(){
+      if(!confettiRunning) return;
+      ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
+      confettiPieces = confettiPieces.filter(p => p.life > 0);
+
+      for(const p of confettiPieces){
+        p.life -= 1;
+        p.vy += p.g;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.vr;
+
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size*1.4);
+        ctx.restore();
+      }
+
+      if(confettiPieces.length === 0){
+        confettiRunning = false;
+        ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
+        return;
+      }
+      requestAnimationFrame(drawConfetti);
+    }
+
+    function startConfetti(){
+      confettiRunning = true;
+      makeConfettiBurst();
+      requestAnimationFrame(drawConfetti);
+      setTimeout(() => { confettiPieces = []; }, 4000);
+    }
+
+    // Screens
+    function showScreen(id){
+      document.querySelectorAll(".screen").forEach(s => s.style.display = "none");
+      document.getElementById(id).style.display = "block";
+    }
+
+    function populateReasons(){
+      const list = document.getElementById("reasonsList");
+      list.innerHTML = "";
+      CONFIG.reasons.forEach(r => {
+        const li = document.createElement("li");
+        li.textContent = r;
+        list.appendChild(li);
+      });
+    }
+
+    function updateTimeTogether(){
+      const start = new Date(CONFIG.startDate);
+      const now = new Date();
+      const days = Math.floor((now - start) / (1000*60*60*24));
+      document.getElementById("timeTogether").textContent = `${days} days and counting ❤️`;
+    }
+
+    const yesBtn = document.getElementById("yesBtn");
+    const noBtn = document.getElementById("noBtn");
+    const card = document.querySelector(".card");
+
+    function goYes(){
+      showScreen("screen2");
+      document.getElementById("messageLine").textContent = CONFIG.messageLine;
+      document.getElementById("herPhoto").src = CONFIG.herPhotoUrl;
+
+      populateReasons();
+      updateTimeTogether();
+
+      startConfetti();
+
+      clearInterval(heartInterval);
+      heartInterval = setInterval(spawnHeart, 120);
+      setTimeout(() => {
+        clearInterval(heartInterval);
+        heartInterval = setInterval(spawnHeart, CONFIG.heartSpawnMs);
+      }, 3500);
+    }
+    yesBtn.addEventListener("click", goYes);
+
+    document.getElementById("toReasons").addEventListener("click", () => showScreen("screen3"));
+    document.getElementById("toTime").addEventListener("click", () => showScreen("screen4"));
+    document.getElementById("toInfinity").addEventListener("click", () => showScreen("screen5"));
+
+    // Evil NO button
+    function teleportNo(){
+      const cardRect = card.getBoundingClientRect();
+      const pad = 16;
+      const maxX = cardRect.width - noBtn.offsetWidth - pad;
+      const maxY = cardRect.height - noBtn.offsetHeight - pad;
+      const x = pad + Math.random() * Math.max(1, maxX - pad);
+      const y = pad + Math.random() * Math.max(1, maxY - pad);
+      noBtn.style.position = "absolute";
+      noBtn.style.left = x + "px";
+      noBtn.style.top = y + "px";
+    }
+    card.addEventListener("pointermove", (e) => {
+      if (document.getElementById("screen1").style.display === "none") return;
+      const b = noBtn.getBoundingClientRect();
+      const dx = (b.left + b.width/2) - e.clientX;
+      const dy = (b.top + b.height/2) - e.clientY;
+      if(Math.hypot(dx, dy) < 140) teleportNo();
+    });
+    noBtn.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      teleportNo();
+    });
+    teleportNo();
+
+    /***********************
+     * Hidden jokes (NOW IT WORKS)
+     ***********************/
+    let tapCount = 0;
+
+    document.addEventListener("click", (e) => {
+      // Don't count while overlay is visible
+      if (overlay && overlay.style.display !== "none") return;
+      // ignore button clicks
+      if (e.target && e.target.closest("button")) return;
+
+      tapCount++;
+      if (tapCount === 12) showJoke("Stop tapping 😭 I already love you.");
+      if (tapCount === 25) showJoke("Unlocked: unlimited hugs + kisses voucher 💘");
+      if (tapCount === 40) showJoke("Bas bas 😤 meri jaan ho tum.");
+    });
+
+    let typed = "";
+    document.addEventListener("keydown", (e) => {
+      // Don't listen while overlay is visible
+      if (overlay && overlay.style.display !== "none") return;
+
+      typed += (e.key || "").toLowerCase();
+      if (typed.length > 12) typed = typed.slice(-12);
+
+      if (typed.includes("zainab")) {
+        showJoke("Easter egg: zainab is the prettiest girl in the universe ✨");
+        typed = "";
+      }
+    });
   </script>
 </body>
 </html>
-
-
