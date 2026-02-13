@@ -5,6 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>For You ❤️</title>
   <style>
+    .eggToast{
+      position:absolute;
+      left:16px;
+      right:16px;
+      bottom:14px;
+      padding:12px 14px;
+      border-radius:16px;
+      background: rgba(255,255,255,0.92);
+      border: 1px solid rgba(0,0,0,0.06);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.18);
+      font-size:14px;
+      line-height:1.4;
+      opacity:0;
+      transform: translateY(10px);
+      transition: opacity .2s ease, transform .2s ease;
+      pointer-events:none;
+      z-index:10;
+      text-align:center;
+    }
+    .eggToast.show{
+      opacity:1;
+      transform: translateY(0);
+    }
+
     #startOverlay, .overlayCard, #startBtn{ pointer-events: auto !important; }
 
     :root{
@@ -250,8 +274,10 @@
       <h1>My Love For You Is</h1>
       <div style="font-size:72px; font-weight:900; color:var(--accent2); margin-top:6px;">∞</div>
       <p>Forever. Always. No matter what.</p>
-      <!-- ✅ removed the P.S. line -->
     </div>
+
+    <!-- ✅ THIS was missing in your version -->
+    <div id="eggToast" class="eggToast"></div>
   </div>
 
   <audio id="bgMusic" loop preload="auto">
@@ -259,12 +285,11 @@
   </audio>
 
   <script>
-    // ✅ Make Start button work EVEN IF anything else breaks later
+    // ✅ Start overlay + audio
     const overlay = document.getElementById("startOverlay");
     const startBtn = document.getElementById("startBtn");
     const music = document.getElementById("bgMusic");
 
-    // ✅ smooth fade: low -> 0.5 (still ends at 0.5)
     function fadeToHalfVolume(durationMs = 1400){
       const startVol = 0.08;
       const targetVol = 0.5;
@@ -285,7 +310,6 @@
       overlay.style.display = "none";
 
       try{
-        // start low, then fade up to 0.5
         music.volume = 0.08;
         await music.play();
         fadeToHalfVolume(1400);
@@ -294,13 +318,12 @@
       }
     }
 
-    // Laptop + mobile safe
     ["click","pointerup","touchstart"].forEach(evt => {
       startBtn.addEventListener(evt, startExperience, { capture:true, passive:false });
       overlay.addEventListener(evt, startExperience, { capture:true, passive:false });
     });
 
-    // Everything else inside try so it can’t kill the Start button
+    // Everything else inside try so it can’t kill Start button
     try {
       const CONFIG = {
         messageLine:
@@ -321,29 +344,46 @@
         ]
       };
 
-      // ✅ Easter eggs (works on laptop)
-      // Tap-count: counts clicks anywhere AFTER start overlay is gone
+      /***********************
+       * On-screen eggs + jokes
+       ***********************/
+      const eggToast = document.getElementById("eggToast");
+      let eggTimer = null;
+
+      function showEgg(msg){
+        if (!eggToast) return;
+        eggToast.textContent = msg;
+        eggToast.classList.add("show");
+        clearTimeout(eggTimer);
+        eggTimer = setTimeout(() => eggToast.classList.remove("show"), 3500);
+      }
+
+      // Tap jokes (clicks) — only after start overlay is gone
       let taps = 0;
       document.addEventListener("click", () => {
-        if (overlay.style.display !== "none") return; // only after Start
+        if (overlay.style.display !== "none") return;
         taps++;
-        if (taps === 12) alert("Stop tapping 😭 I already love you.");
-        if (taps === 25) alert("Unlocked: unlimited hugs & kisses when we meet 😌");
-        if (taps === 40) alert("Okay okay… meri jaan ho tum ❤️");
+        if (taps === 12) showEgg("stop tapping ms dummyyyyyy I love you so much.");
+        if (taps === 25) showEgg("Next layer unlocked. Now you have to give me unlimited hugs and kisses when you come back");
+        if (taps === 40) showEgg("Stop with your expressionssss. Meri jaan ho tum");
       });
 
-      // Typing easter egg: type "zainab" anywhere (no textbox needed)
+      // Type "zainab" anywhere — only after start overlay is gone
       let typed = "";
       document.addEventListener("keydown", (e) => {
-        if (overlay.style.display !== "none") return; // only after Start
+        if (overlay.style.display !== "none") return;
         typed += (e.key || "").toLowerCase();
         if (typed.length > 20) typed = typed.slice(-20);
+
         if (typed.includes("zainab")) {
-          alert("Easter egg: zainab is the most beautiful girl in the whole wide world ✨");
+          showEgg("Easter egg: zainab is the most beautiful girl in the whole wide world ");
           typed = "";
         }
       });
 
+      /***********************
+       * Hearts
+       ***********************/
       const heartsLayer = document.getElementById("hearts");
       function rand(min, max){ return Math.random() * (max - min) + min; }
 
@@ -364,6 +404,9 @@
       }
       let heartInterval = setInterval(spawnHeart, CONFIG.heartSpawnMs);
 
+      /***********************
+       * Confetti
+       ***********************/
       const canvas = document.getElementById("confettiCanvas");
       const ctx = canvas.getContext("2d");
       function resizeCanvas(){
@@ -434,6 +477,9 @@
         setTimeout(() => { confettiPieces = []; }, 4000);
       }
 
+      /***********************
+       * Screen logic
+       ***********************/
       function showScreen(id){
         document.querySelectorAll(".screen").forEach(s => s.style.display = "none");
         document.getElementById(id).style.display = "block";
@@ -510,9 +556,11 @@
       });
 
       teleportNo();
+
     } catch (err) {
       console.log("Non-fatal script error:", err);
     }
   </script>
 </body>
 </html>
+
